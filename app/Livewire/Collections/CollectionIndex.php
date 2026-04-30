@@ -101,6 +101,6 @@ class CollectionIndex extends Component
                 ->orderBy('name')
                 ->get(),
             'colors' => $this->colors,
-        ]);
+        ])->layout('layouts.app', ['title' => 'Collections']);
     }
 }

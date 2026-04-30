@@ -150,6 +150,6 @@ class BookmarkIndex extends Component
         return view('livewire.bookmarks.bookmark-index', [
             'bookmarks' => $this->getBookmarksQuery()->with(['tags', 'collections'])->paginate(24),
             'collections' => Auth::user()->collections()->orderBy('name')->get(),
-        ]);
+        ])->layout('layouts.app', ['title' => 'Bookmarks']);
     }
 }
