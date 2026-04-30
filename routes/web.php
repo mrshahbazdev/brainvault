@@ -7,6 +7,11 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\ImportExportController;
+use App\Http\Controllers\Web\SettingsController;
+use App\Livewire\Bookmarks\BookmarkIndex;
+use App\Livewire\Collections\CollectionIndex;
+use App\Livewire\Notes\NoteIndex;
 use Illuminate\Support\Facades\Route;
 
 // Landing Page
@@ -50,4 +55,32 @@ Route::middleware('auth')->group(function () {
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Bookmarks
+    Route::get('/bookmarks', BookmarkIndex::class)->name('bookmarks.index');
+
+    // Collections
+    Route::get('/collections', CollectionIndex::class)->name('collections.index');
+
+    // Notes
+    Route::get('/notes', NoteIndex::class)->name('notes.index');
+
+    // Highlights
+    Route::get('/highlights', function () {
+        return view('highlights.index');
+    })->name('highlights.index');
+
+    // Settings
+    Route::get('/settings', [SettingsController::class, 'profile'])->name('settings.profile');
+    Route::put('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::get('/settings/api-tokens', [SettingsController::class, 'apiTokens'])->name('settings.tokens');
+    Route::post('/settings/api-tokens', [SettingsController::class, 'createApiToken'])->name('settings.tokens.create');
+    Route::delete('/settings/api-tokens/{token}', [SettingsController::class, 'deleteApiToken'])->name('settings.tokens.delete');
+
+    // Import/Export
+    Route::get('/import', [ImportExportController::class, 'showImport'])->name('import.show');
+    Route::post('/import', [ImportExportController::class, 'import'])->name('import.process');
+    Route::get('/export/json', [ImportExportController::class, 'exportJson'])->name('export.json');
+    Route::get('/export/html', [ImportExportController::class, 'exportHtml'])->name('export.html');
 });

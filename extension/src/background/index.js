@@ -1,0 +1,155 @@
+import { api } from '../utils/api.js';
+
+// Initialize API on startup
+api.init();
+
+// Context menu for right-click "Save to BrainVault"
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: 'save-to-brainvault',
+    title: 'Save to BrainVault',
+    contexts: ['page', 'link'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'save-selection-brainvault',
+    title: 'Save Selection as Highlight',
+    contexts: ['selection'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'save-image-brainvault',
+    title: 'Save Image to BrainVault',
+    contexts: ['image'],
+  });
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  await api.init();
+
+  if (!api.isAuthenticated()) {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon-48.png',
+      title: 'BrainVault',
+      message: 'Please log in to save bookmarks.',
+    });
+    return;
+  }
+
+  try {
+    if (info.menuItemId === 'save-to-brainvault') {
+      const url = info.linkUrl || info.pageUrl;
+      const title = tab.title || '';
+
+      await api.createBookmark({ url, title });
+
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/icon-48.png',
+        title: 'BrainVault',
+        message: 'Bookmark saved successfully!',
+      });
+
+      updateBadge(tab.id);
+    }
+
+    if (info.menuItemId === 'save-selection-brainvault' && info.selectionText) {
+      // Send message to content script to get selection details
+      chrome.tabs.sendMessage(tab.id, {
+        type: 'GET_SELECTION_DETAILS',
+        text: info.selectionText,
+      });
+    }
+  } catch (error) {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon-48.png',
+      title: 'BrainVault Error',
+      message: error.message || 'Failed to save.',
+    });
+  }
+});
+
+// Handle messages from popup and content scripts
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  handleMessage(message, sender).then(sendResponse).catch(err => {
+    sendResponse({ error: err.message });
+  });
+  return true; // Keep message channel open for async response
+});
+
+async function handleMessage(message, sender) {
+  await api.init();
+
+  switch (message.type) {
+    case 'SAVE_BOOKMARK': {
+      const bookmark = await api.createBookmark(message.data);
+      return { success: true, bookmark };
+    }
+
+    case 'SAVE_HIGHLIGHT': {
+      const highlight = await api.createHighlight(message.data);
+      return { success: true, highlight };
+    }
+
+    case 'SAVE_NOTE': {
+      const note = await api.createNote(message.data);
+      return { success: true, note };
+    }
+
+    case 'GET_BOOKMARKS': {
+      const bookmarks = await api.getBookmarks(message.params);
+      return { success: true, bookmarks };
+    }
+
+    case 'GET_COLLECTIONS': {
+      const collections = await api.getCollections();
+      return { success: true, collections };
+    }
+
+    case 'GET_HIGHLIGHTS_FOR_URL': {
+      const highlights = await api.getHighlights({ page_url: message.url });
+      return { success: true, highlights };
+    }
+
+    case 'GET_USER': {
+      const user = await api.getUser();
+      return { success: true, user };
+    }
+
+    case 'CHECK_AUTH': {
+      return { authenticated: api.isAuthenticated() };
+    }
+
+    case 'SET_TOKEN': {
+      await api.setToken(message.token);
+      return { success: true };
+    }
+
+    case 'LOGOUT': {
+      await chrome.storage.sync.remove('apiToken');
+      api.token = null;
+      return { success: true };
+    }
+
+    default:
+      return { error: 'Unknown message type' };
+  }
+}
+
+// Update badge with saved status
+async function updateBadge(tabId) {
+  chrome.action.setBadgeBackgroundColor({ color: '#6366F1' });
+  chrome.action.setBadgeText({ text: '1', tabId });
+
+  setTimeout(() => {
+    chrome.action.setBadgeText({ text: '', tabId });
+  }, 2000);
+}
+
+// Open side panel when extension icon is clicked (with Shift)
+chrome.action.onClicked.addListener((tab) => {
+  chrome.sidePanel.open({ tabId: tab.id });
+});
