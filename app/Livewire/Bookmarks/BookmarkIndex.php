@@ -132,7 +132,7 @@ class BookmarkIndex extends Component
     protected function getBookmarksQuery()
     {
         return Auth::user()->bookmarks()
-            ->when($this->search, fn ($q) => $q->where('title', 'ilike', "%{$this->search}%")->orWhere('url', 'ilike', "%{$this->search}%")->orWhere('description', 'ilike', "%{$this->search}%"))
+            ->when($this->search, fn ($q) => $q->where('title', 'like', "%{$this->search}%")->orWhere('url', 'like', "%{$this->search}%")->orWhere('description', 'like', "%{$this->search}%"))
             ->when($this->filter === 'favorites', fn ($q) => $q->where('is_favorite', true))
             ->when($this->filter === 'archived', fn ($q) => $q->where('is_archived', true))
             ->when($this->filter === 'unread', fn ($q) => $q->where('is_read', false))

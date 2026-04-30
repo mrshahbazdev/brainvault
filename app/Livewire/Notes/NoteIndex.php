@@ -83,7 +83,7 @@ class NoteIndex extends Component
     public function render()
     {
         $notes = Auth::user()->notes()
-            ->when($this->search, fn ($q) => $q->where('title', 'ilike', "%{$this->search}%")->orWhere('content_plain', 'ilike', "%{$this->search}%"))
+            ->when($this->search, fn ($q) => $q->where('title', 'like', "%{$this->search}%")->orWhere('content_plain', 'like', "%{$this->search}%"))
             ->when($this->filter === 'all', fn ($q) => $q->where('is_trashed', false))
             ->when($this->filter === 'pinned', fn ($q) => $q->where('is_pinned', true)->where('is_trashed', false))
             ->when($this->filter === 'archived', fn ($q) => $q->where('is_archived', true)->where('is_trashed', false))

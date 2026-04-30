@@ -9,8 +9,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Enable pgvector extension
-        DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+        }
 
         Schema::create('embeddings', function (Blueprint $table) {
             $table->id();
@@ -23,11 +26,17 @@ return new class extends Migration
             $table->index(['embeddable_type', 'embeddable_id']);
         });
 
-        // Add vector column (1536 dimensions for text-embedding-3-small)
-        DB::statement('ALTER TABLE embeddings ADD COLUMN embedding vector(1536)');
-
-        // Create HNSW index for fast similarity search
-        DB::statement('CREATE INDEX embeddings_embedding_idx ON embeddings USING hnsw (embedding vector_cosine_ops)');
+        if ($driver === 'pgsql') {
+            // Add native vector column (1536 dimensions for text-embedding-3-small)
+            DB::statement('ALTER TABLE embeddings ADD COLUMN embedding vector(1536)');
+            // Create HNSW index for fast similarity search
+            DB::statement('CREATE INDEX embeddings_embedding_idx ON embeddings USING hnsw (embedding vector_cosine_ops)');
+        } else {
+            // MySQL/SQLite fallback: store embedding as JSON
+            Schema::table('embeddings', function (Blueprint $table) {
+                $table->json('embedding')->nullable();
+            });
+        }
     }
 
     public function down(): void
