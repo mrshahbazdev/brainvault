@@ -9,8 +9,23 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @group Bookmarks
+ * @authenticated
+ */
 class BookmarkController extends Controller
 {
+    /**
+     * List bookmarks
+     *
+     * Get paginated list of the authenticated user's bookmarks with optional filters.
+     *
+     * @queryParam search string Search bookmarks by title. Example: Laravel
+     * @queryParam collection_id integer Filter by collection. Example: 1
+     * @queryParam is_favorite boolean Filter favorites. Example: 1
+     * @queryParam is_archived boolean Filter archived. Example: 0
+     * @queryParam per_page integer Items per page (default 20). Example: 20
+     */
     public function index(Request $request): JsonResponse
     {
         $bookmarks = Auth::user()->bookmarks()

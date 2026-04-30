@@ -5,8 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BookmarkResource\Pages;
 use App\Models\Bookmark;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -14,13 +14,13 @@ class BookmarkResource extends Resource
 {
     protected static ?string $model = Bookmark::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-bookmark';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-bookmark';
 
     protected static ?int $navigationSort = 2;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
+        return $schema->components([
             Forms\Components\TextInput::make('url')
                 ->url()
                 ->required()
@@ -63,14 +63,16 @@ class BookmarkResource extends Resource
                     ->label('User'),
                 Tables\Columns\TextColumn::make('site_name')
                     ->searchable(),
-                Tables\Columns\BadgeColumn::make('content_type')
+                Tables\Columns\TextColumn::make('content_type')
+                    ->badge()
                     ->colors([
                         'primary' => 'article',
                         'success' => 'documentation',
                         'gray' => 'webpage',
                         'warning' => 'video',
                     ]),
-                Tables\Columns\BadgeColumn::make('ai_category')
+                Tables\Columns\TextColumn::make('ai_category')
+                    ->badge()
                     ->color('info'),
                 Tables\Columns\IconColumn::make('is_favorite')
                     ->boolean(),

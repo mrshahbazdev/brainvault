@@ -10,8 +10,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @group Notes
+ * @authenticated
+ */
 class NoteController extends Controller
 {
+    /**
+     * List notes
+     *
+     * @queryParam search string Search by title. Example: meeting
+     * @queryParam bookmark_id integer Filter by bookmark. Example: 1
+     * @queryParam is_pinned boolean Filter pinned notes. Example: 1
+     * @queryParam per_page integer Items per page. Example: 20
+     */
     public function index(Request $request): JsonResponse
     {
         $notes = Auth::user()->notes()

@@ -15,6 +15,7 @@ use App\Livewire\Bookmarks\BookmarkIndex;
 use App\Livewire\Collections\CollectionIndex;
 use App\Livewire\Notes\NoteIndex;
 use App\Livewire\Billing\BillingPage;
+use App\Livewire\Onboarding\OnboardingWizard;
 use App\Livewire\Research\ResearchBoard;
 use App\Livewire\Search\SearchPage;
 use App\Livewire\Teams\TeamIndex;
@@ -24,6 +25,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('landing.index');
 })->name('home');
+
+Route::get('/offline', function () {
+    return view('offline');
+})->name('offline');
 
 // Auth Routes (Guest only)
 Route::middleware('guest')->group(function () {
@@ -58,8 +63,13 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 });
 
-// Authenticated Routes
+// Onboarding
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/onboarding', OnboardingWizard::class)->name('onboarding');
+});
+
+// Authenticated Routes
+Route::middleware(['auth', 'verified', \App\Http\Middleware\EnsureOnboardingCompleted::class])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Bookmarks
