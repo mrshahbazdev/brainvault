@@ -34,6 +34,7 @@
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Tags</span>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script src="https://d3js.org/d3.v7.min.js"></script>
