@@ -35,11 +35,11 @@ class SemanticSearchService
     {
         return Bookmark::where('user_id', $userId)
             ->where(function ($q) use ($query) {
-                $q->where('title', 'ilike', "%{$query}%")
-                    ->orWhere('description', 'ilike', "%{$query}%")
-                    ->orWhere('url', 'ilike', "%{$query}%")
-                    ->orWhere('site_name', 'ilike', "%{$query}%")
-                    ->orWhere('ai_summary', 'ilike', "%{$query}%");
+                $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhere('url', 'like', "%{$query}%")
+                    ->orWhere('site_name', 'like', "%{$query}%")
+                    ->orWhere('ai_summary', 'like', "%{$query}%");
             })
             ->where('is_archived', false)
             ->with(['tags', 'collections'])
@@ -51,8 +51,8 @@ class SemanticSearchService
     {
         return Note::where('user_id', $userId)
             ->where(function ($q) use ($query) {
-                $q->where('title', 'ilike', "%{$query}%")
-                    ->orWhere('content_plain', 'ilike', "%{$query}%");
+                $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('content_plain', 'like', "%{$query}%");
             })
             ->where('is_trashed', false)
             ->limit($limit)
@@ -60,6 +60,17 @@ class SemanticSearchService
     }
 
     protected function semanticSearch(int $userId, array $embedding, int $limit): Collection
+    {
+        $driver = DB::getDriverName();
+
+        if ($driver === 'pgsql') {
+            return $this->semanticSearchPgsql($userId, $embedding, $limit);
+        }
+
+        return $this->semanticSearchFallback($userId, $embedding, $limit);
+    }
+
+    protected function semanticSearchPgsql(int $userId, array $embedding, int $limit): Collection
     {
         $vectorString = '[' . implode(',', $embedding) . ']';
 
@@ -81,6 +92,71 @@ class SemanticSearchService
             LIMIT ?
         ", [$vectorString, $userId, $userId, $vectorString, $limit]);
 
+        return $this->hydrateResults($results);
+    }
+
+    protected function semanticSearchFallback(int $userId, array $embedding, int $limit): Collection
+    {
+        $bookmarkIds = Bookmark::where('user_id', $userId)
+            ->where('is_archived', false)
+            ->pluck('id');
+
+        $noteIds = Note::where('user_id', $userId)
+            ->where('is_trashed', false)
+            ->pluck('id');
+
+        $rows = DB::table('embeddings')
+            ->where(function ($q) use ($bookmarkIds, $noteIds) {
+                $q->where(function ($q2) use ($bookmarkIds) {
+                    $q2->where('embeddable_type', 'bookmark')
+                        ->whereIn('embeddable_id', $bookmarkIds);
+                })->orWhere(function ($q2) use ($noteIds) {
+                    $q2->where('embeddable_type', 'note')
+                        ->whereIn('embeddable_id', $noteIds);
+                });
+            })
+            ->whereNotNull('embedding')
+            ->get();
+
+        $scored = $rows->map(function ($row) use ($embedding) {
+            $stored = json_decode($row->embedding, true);
+            if (!is_array($stored)) {
+                return null;
+            }
+
+            return (object) [
+                'embeddable_type' => $row->embeddable_type,
+                'embeddable_id' => $row->embeddable_id,
+                'similarity' => $this->cosineSimilarity($embedding, $stored),
+            ];
+        })
+            ->filter()
+            ->sortByDesc('similarity')
+            ->take($limit)
+            ->values();
+
+        return $this->hydrateResults($scored);
+    }
+
+    protected function cosineSimilarity(array $a, array $b): float
+    {
+        $dotProduct = 0.0;
+        $normA = 0.0;
+        $normB = 0.0;
+
+        for ($i = 0, $len = count($a); $i < $len; $i++) {
+            $dotProduct += $a[$i] * $b[$i];
+            $normA += $a[$i] * $a[$i];
+            $normB += $b[$i] * $b[$i];
+        }
+
+        $denominator = sqrt($normA) * sqrt($normB);
+
+        return $denominator > 0 ? $dotProduct / $denominator : 0.0;
+    }
+
+    protected function hydrateResults($results): Collection
+    {
         return collect($results)->map(function ($row) {
             $model = match ($row->embeddable_type) {
                 'bookmark' => Bookmark::with(['tags', 'collections'])->find($row->embeddable_id),
@@ -118,7 +194,17 @@ class SemanticSearchService
         }
 
         $userId = $model->user_id;
+        $driver = DB::getDriverName();
 
+        if ($driver === 'pgsql') {
+            return $this->findRelatedPgsql($type, $id, $userId, $limit);
+        }
+
+        return $this->findRelatedFallback($type, $id, $userId, $embedding, $limit);
+    }
+
+    protected function findRelatedPgsql(string $type, int $id, int $userId, int $limit): Collection
+    {
         $results = DB::select("
             SELECT
                 e.embeddable_type,
@@ -137,18 +223,50 @@ class SemanticSearchService
             LIMIT ?
         ", [$type, $id, $type, $id, $userId, $userId, $limit]);
 
-        return collect($results)->map(function ($row) {
-            $model = match ($row->embeddable_type) {
-                'bookmark' => Bookmark::with('tags')->find($row->embeddable_id),
-                'note' => Note::find($row->embeddable_id),
-                default => null,
-            };
+        return $this->hydrateResults($results);
+    }
 
-            return $model ? [
-                'type' => $row->embeddable_type,
-                'similarity' => round($row->similarity, 4),
-                'item' => $model,
-            ] : null;
-        })->filter()->values();
+    protected function findRelatedFallback(string $type, int $id, int $userId, string $embedding, int $limit): Collection
+    {
+        $sourceEmbedding = json_decode($embedding, true);
+        if (!is_array($sourceEmbedding)) {
+            return collect();
+        }
+
+        $rows = DB::table('embeddings')
+            ->where(function ($q) use ($type, $id) {
+                $q->where('embeddable_type', '!=', $type)
+                    ->orWhere('embeddable_id', '!=', $id);
+            })
+            ->where(function ($q) use ($userId) {
+                $q->where(function ($q2) use ($userId) {
+                    $q2->where('embeddable_type', 'bookmark')
+                        ->whereIn('embeddable_id', Bookmark::where('user_id', $userId)->pluck('id'));
+                })->orWhere(function ($q2) use ($userId) {
+                    $q2->where('embeddable_type', 'note')
+                        ->whereIn('embeddable_id', Note::where('user_id', $userId)->pluck('id'));
+                });
+            })
+            ->whereNotNull('embedding')
+            ->get();
+
+        $scored = $rows->map(function ($row) use ($sourceEmbedding) {
+            $stored = json_decode($row->embedding, true);
+            if (!is_array($stored)) {
+                return null;
+            }
+
+            return (object) [
+                'embeddable_type' => $row->embeddable_type,
+                'embeddable_id' => $row->embeddable_id,
+                'similarity' => $this->cosineSimilarity($sourceEmbedding, $stored),
+            ];
+        })
+            ->filter()
+            ->sortByDesc('similarity')
+            ->take($limit)
+            ->values();
+
+        return $this->hydrateResults($scored);
     }
 }

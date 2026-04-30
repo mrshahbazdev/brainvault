@@ -28,7 +28,7 @@ class NoteController extends Controller
     {
         $notes = Auth::user()->notes()
             ->where('is_trashed', false)
-            ->when($request->search, fn ($q, $search) => $q->where('title', 'ilike', "%{$search}%"))
+            ->when($request->search, fn ($q, $search) => $q->where('title', 'like', "%{$search}%"))
             ->when($request->bookmark_id, fn ($q, $id) => $q->where('bookmark_id', $id))
             ->when($request->boolean('is_pinned'), fn ($q) => $q->where('is_pinned', true))
             ->with('tags')

@@ -29,7 +29,7 @@ class BookmarkController extends Controller
     public function index(Request $request): JsonResponse
     {
         $bookmarks = Auth::user()->bookmarks()
-            ->when($request->search, fn ($q, $search) => $q->where('title', 'ilike', "%{$search}%")->orWhere('url', 'ilike', "%{$search}%"))
+            ->when($request->search, fn ($q, $search) => $q->where('title', 'like', "%{$search}%")->orWhere('url', 'like', "%{$search}%"))
             ->when($request->content_type, fn ($q, $type) => $q->where('content_type', $type))
             ->when($request->boolean('is_favorite'), fn ($q) => $q->where('is_favorite', true))
             ->when($request->boolean('is_archived'), fn ($q) => $q->where('is_archived', true))

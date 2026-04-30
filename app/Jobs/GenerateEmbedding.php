@@ -40,7 +40,10 @@ class GenerateEmbedding implements ShouldQueue
             return;
         }
 
-        $vectorString = '[' . implode(',', $embedding) . ']';
+        $driver = DB::getDriverName();
+        $embeddingValue = $driver === 'pgsql'
+            ? '[' . implode(',', $embedding) . ']'
+            : json_encode($embedding);
 
         DB::table('embeddings')->updateOrInsert(
             [
@@ -48,7 +51,7 @@ class GenerateEmbedding implements ShouldQueue
                 'embeddable_id' => $this->modelId,
             ],
             [
-                'embedding' => $vectorString,
+                'embedding' => $embeddingValue,
                 'model' => 'text-embedding-3-small',
                 'updated_at' => now(),
                 'created_at' => now(),
