@@ -16,7 +16,7 @@
             <div class="flex items-center justify-between h-16">
                 {{-- Logo --}}
                 <a href="{{ route('home') }}" class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 bg-primary-500 rounded-xl flex items-center justify-center">
+                    <div class="w-9 h-9 animated-gradient rounded-xl flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
@@ -38,10 +38,10 @@
                         <svg x-show="$store.darkMode.on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                     </button>
                     @auth
-                        <a href="{{ route('dashboard') }}" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl transition-colors">Dashboard</a>
+                        <a href="{{ route('dashboard') }}" class="px-4 py-2 btn-gradient text-sm font-semibold rounded-xl transition-all">Dashboard</a>
                     @else
                         <a href="{{ route('login') }}" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Sign In</a>
-                        <a href="{{ route('register') }}" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-primary-500/25 transition-all">Get Started Free</a>
+                        <a href="{{ route('register') }}" class="px-4 py-2 btn-gradient text-sm font-semibold rounded-xl transition-all">Get Started Free</a>
                     @endauth
                 </div>
 
@@ -59,7 +59,7 @@
                     <a href="#pricing" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">Pricing</a>
                     <div class="flex gap-3 pt-2">
                         <a href="{{ route('login') }}" class="flex-1 text-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300">Sign In</a>
-                        <a href="{{ route('register') }}" class="flex-1 text-center px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl">Get Started</a>
+                        <a href="{{ route('register') }}" class="flex-1 text-center px-4 py-2 btn-gradient text-sm font-semibold rounded-xl">Get Started</a>
                     </div>
                 </div>
             </div>
@@ -90,7 +90,7 @@
 
                 {{-- CTA Buttons --}}
                 <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-2xl shadow-xl shadow-primary-500/25 hover:shadow-primary-500/40 transition-all text-lg">
+                    <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-4 btn-gradient font-semibold rounded-2xl transition-all text-lg">
                         Get Started Free
                     </a>
                     <a href="#features" class="w-full sm:w-auto px-8 py-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl hover:bg-gray-50 dark:hover:bg-surface-800 transition-colors text-lg flex items-center justify-center gap-2">
@@ -324,7 +324,7 @@
             <h2 class="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white">Ready to build your<br><span class="text-gradient">second brain</span>?</h2>
             <p class="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-xl mx-auto">Join thousands of knowledge workers who use BrainVault to save, organize, and rediscover information.</p>
             <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-2xl shadow-xl shadow-primary-500/25 hover:shadow-primary-500/40 transition-all text-lg">
+                <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-4 btn-gradient font-semibold rounded-2xl transition-all text-lg">
                     Get Started Free
                 </a>
             </div>
@@ -337,7 +337,7 @@
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
                     <a href="{{ route('home') }}" class="flex items-center gap-2.5 mb-4">
-                        <div class="w-8 h-8 bg-primary-500 rounded-xl flex items-center justify-center">
+                        <div class="w-8 h-8 animated-gradient rounded-xl flex items-center justify-center">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                         </div>
                         <span class="text-lg font-bold text-gray-900 dark:text-white">BrainVault</span>

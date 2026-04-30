@@ -1,16 +1,16 @@
 <x-layouts.app title="Dashboard">
     {{-- Welcome Header --}}
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Welcome back, {{ auth()->user()->name }}!</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Welcome back, <span class="text-gradient">{{ auth()->user()->name }}</span>!</h1>
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Here's an overview of your knowledge base.</p>
     </div>
 
     {{-- Stats Grid --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white dark:bg-surface-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
+        <div class="bg-white dark:bg-surface-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:shadow-primary-500/10 transition-all">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
                 </div>
                 <div>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total_bookmarks'] }}</p>
@@ -18,10 +18,10 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white dark:bg-surface-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
+        <div class="bg-white dark:bg-surface-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:shadow-emerald-500/10 transition-all">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                 </div>
                 <div>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total_notes'] }}</p>
@@ -29,10 +29,10 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white dark:bg-surface-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
+        <div class="bg-white dark:bg-surface-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:shadow-amber-500/10 transition-all">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
                 </div>
                 <div>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total_highlights'] }}</p>
@@ -40,10 +40,10 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white dark:bg-surface-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800">
+        <div class="bg-white dark:bg-surface-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:shadow-purple-500/10 transition-all">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
                 </div>
                 <div>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total_collections'] }}</p>
