@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Laravel\Scout\Searchable;
 
 class Bookmark extends Model
 {
-    use HasFactory;
+    use HasFactory, Searchable;
 
     protected $fillable = [
         'user_id',
@@ -88,5 +89,26 @@ class Bookmark extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'url' => $this->url,
+            'site_name' => $this->site_name,
+            'excerpt' => $this->excerpt,
+            'ai_summary' => $this->ai_summary,
+            'ai_category' => $this->ai_category,
+            'ai_keywords' => is_array($this->ai_keywords) ? implode(', ', $this->ai_keywords) : null,
+        ];
+    }
+
+    public function searchableAs(): string
+    {
+        return 'bookmarks';
     }
 }

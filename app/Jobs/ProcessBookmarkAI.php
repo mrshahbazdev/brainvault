@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\BookmarkProcessed;
 use App\Models\Bookmark;
 use App\Services\AIService;
 use App\Services\MetadataScraperService;
@@ -92,6 +93,9 @@ class ProcessBookmarkAI implements ShouldQueue
         }
 
         $bookmark->save();
+
+        // Broadcast real-time notification
+        BookmarkProcessed::dispatch($bookmark);
 
         // Generate embedding for semantic search
         GenerateEmbedding::dispatch($this->bookmarkId, 'bookmark');

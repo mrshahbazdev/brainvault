@@ -123,9 +123,47 @@
                                 <option value="checklist">Checklist</option>
                             </select>
                         </div>
-                        <div>
-                            <textarea wire:model="newContent" rows="8" placeholder="Start writing..."
-                                      class="w-full px-4 py-3 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 resize-none"></textarea>
+                        <div x-data="tiptapEditor($wire.newContent)" x-on:editor-update.window="$wire.newContent = $event.detail.html" class="bg-gray-100 dark:bg-surface-800 rounded-xl overflow-hidden">
+                            {{-- Toolbar --}}
+                            <div class="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 flex-wrap">
+                                <button type="button" @click="toggleBold()" :class="isActive('bold') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Bold">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/><path d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/></svg>
+                                </button>
+                                <button type="button" @click="toggleItalic()" :class="isActive('italic') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Italic">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 4h4m-2 0l-4 16m0 0h4"/></svg>
+                                </button>
+                                <button type="button" @click="toggleStrike()" :class="isActive('strike') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Strikethrough">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 12h12M7 6h5a4 4 0 010 8H7"/></svg>
+                                </button>
+                                <button type="button" @click="toggleHighlight()" :class="isActive('highlight') ? 'bg-yellow-200 dark:bg-yellow-900' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Highlight">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/></svg>
+                                </button>
+                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+                                <button type="button" @click="setHeading(2)" :class="isActive('heading', {level: 2}) ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors text-xs font-bold" title="Heading">H2</button>
+                                <button type="button" @click="setHeading(3)" :class="isActive('heading', {level: 3}) ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors text-xs font-bold" title="Heading">H3</button>
+                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+                                <button type="button" @click="toggleBulletList()" :class="isActive('bulletList') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Bullet List">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                                </button>
+                                <button type="button" @click="toggleOrderedList()" :class="isActive('orderedList') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Numbered List">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 6h11M10 12h11M10 18h11M3 5l2 1V11M3 17h4"/></svg>
+                                </button>
+                                <button type="button" @click="toggleTaskList()" :class="isActive('taskList') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Task List">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                </button>
+                                <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+                                <button type="button" @click="toggleBlockquote()" :class="isActive('blockquote') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Quote">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151C7.563 6.068 6 8.789 6 11h4v10H0z"/></svg>
+                                </button>
+                                <button type="button" @click="toggleCode()" :class="isActive('codeBlock') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Code">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                                </button>
+                                <button type="button" @click="setLink()" :class="isActive('link') ? 'bg-gray-300 dark:bg-surface-600' : ''" class="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors" title="Link">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                </button>
+                            </div>
+                            {{-- Editor Area --}}
+                            <div x-ref="editor" class="min-h-[200px]"></div>
                         </div>
                     </div>
                     <div class="flex items-center justify-end gap-3 mt-6">

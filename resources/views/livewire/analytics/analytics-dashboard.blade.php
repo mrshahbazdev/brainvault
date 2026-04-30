@@ -67,24 +67,44 @@
         {{-- Activity Chart --}}
         <div class="bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Bookmarks Over Time</h2>
-            <div class="h-48 flex items-end gap-1" x-data="{ data: {{ json_encode($bookmarksByDay) }} }">
-                @php $maxCount = max(array_values($bookmarksByDay) ?: [1]); @endphp
-                @for($i = (int)$period; $i >= 0; $i--)
-                    @php
-                        $date = now()->subDays($i)->format('Y-m-d');
-                        $count = $bookmarksByDay[$date] ?? 0;
-                        $height = $maxCount > 0 ? max(2, ($count / $maxCount) * 100) : 2;
-                    @endphp
-                    <div class="flex-1 min-w-[2px] group relative">
-                        <div class="bg-primary-500 hover:bg-primary-600 rounded-t transition-all cursor-default" style="height: {{ $height }}%">
-                            @if($count > 0)
-                                <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap">
-                                    {{ $date }}: {{ $count }}
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @endfor
+            <div class="h-48" x-data="{
+                chart: null,
+                init() {
+                    const data = @js($bookmarksByDay);
+                    const labels = [];
+                    const values = [];
+                    for (let i = {{ (int)$period }}; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        const key = d.toISOString().split('T')[0];
+                        labels.push(key.slice(5));
+                        values.push(data[key] || 0);
+                    }
+                    this.chart = new Chart(this.$refs.activityChart, {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Bookmarks',
+                                data: values,
+                                backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                                borderRadius: 4,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { display: false },
+                                y: { beginAtZero: true, ticks: { stepSize: 1, color: '#9CA3AF' }, grid: { color: 'rgba(156,163,175,0.1)' } }
+                            }
+                        }
+                    });
+                },
+                destroy() { this.chart?.destroy(); }
+            }">
+                <canvas x-ref="activityChart" class="w-full h-full"></canvas>
             </div>
         </div>
 
