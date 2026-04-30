@@ -94,6 +94,6 @@ class NoteIndex extends Component
 
         return view('livewire.notes.note-index', [
             'notes' => $notes,
-        ]);
+        ])->layout('layouts.app', ['title' => 'Notes']);
     }
 }
