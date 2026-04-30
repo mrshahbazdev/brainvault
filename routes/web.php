@@ -14,6 +14,7 @@ use App\Livewire\Analytics\AnalyticsDashboard;
 use App\Livewire\Bookmarks\BookmarkIndex;
 use App\Livewire\Collections\CollectionIndex;
 use App\Livewire\Notes\NoteIndex;
+use App\Livewire\Billing\BillingPage;
 use App\Livewire\Research\ResearchBoard;
 use App\Livewire\Search\SearchPage;
 use App\Livewire\Teams\TeamIndex;
@@ -97,6 +98,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/settings/api-tokens', [SettingsController::class, 'apiTokens'])->name('settings.tokens');
     Route::post('/settings/api-tokens', [SettingsController::class, 'createApiToken'])->name('settings.tokens.create');
     Route::delete('/settings/api-tokens/{token}', [SettingsController::class, 'deleteApiToken'])->name('settings.tokens.delete');
+
+    // Billing
+    Route::get('/billing', BillingPage::class)->name('billing');
 
     // Import/Export
     Route::get('/import', [ImportExportController::class, 'showImport'])->name('import.show');

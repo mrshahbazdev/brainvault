@@ -170,4 +170,18 @@ class AIService
             return null;
         }
     }
+
+    public function enhanceNote(string $title, string $content, string $instruction = 'improve'): ?string
+    {
+        $prompts = [
+            'improve' => 'Improve the following note by fixing grammar, enhancing clarity, and adding structure. Keep the same meaning and tone.',
+            'expand' => 'Expand the following note with more details, examples, and explanations. Keep the original content and add to it.',
+            'summarize' => 'Create a concise summary of the following note, highlighting key points in bullet points.',
+            'format' => 'Reformat the following note with proper headings, bullet points, and structure. Return as HTML.',
+        ];
+
+        $systemPrompt = $prompts[$instruction] ?? $prompts['improve'];
+
+        return $this->chat($systemPrompt, "Title: {$title}\n\nContent: {$content}");
+    }
 }

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
             'onboarding_completed' => true,
             'plan' => 'pro',
+            'is_admin' => true,
         ]);
 
         // Create tags

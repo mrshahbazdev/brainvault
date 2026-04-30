@@ -23,6 +23,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tags API
     Route::apiResource('tags', \App\Http\Controllers\Api\TagController::class);
 
+    // AI Note Enhancement
+    Route::post('/notes/{note}/enhance', [\App\Http\Controllers\Api\NoteController::class, 'enhance']);
+
     // Search & AI
     Route::get('/search', [\App\Http\Controllers\Api\SearchController::class, 'search']);
     Route::get('/search/related', [\App\Http\Controllers\Api\SearchController::class, 'related']);

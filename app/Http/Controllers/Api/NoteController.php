@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Note;
+use App\Services\AIService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -77,5 +79,37 @@ class NoteController extends Controller
         ]);
 
         return response()->json(null, 204);
+    }
+
+    public function enhance(Request $request, Note $note, AIService $ai): JsonResponse
+    {
+        $this->authorize('update', $note);
+
+        $request->validate([
+            'action' => ['required', 'in:improve,expand,summarize,format'],
+        ]);
+
+        if (!$ai->isConfigured()) {
+            return response()->json(['message' => 'AI service is not configured.'], 503);
+        }
+
+        $result = $ai->enhanceNote(
+            $note->title ?? '',
+            $note->content_plain ?? strip_tags($note->content ?? ''),
+            $request->action,
+        );
+
+        if (!$result) {
+            return response()->json(['message' => 'AI enhancement failed.'], 500);
+        }
+
+        AuditLog::log('note.ai_enhance', $note, null, [
+            'action' => $request->action,
+        ]);
+
+        return response()->json([
+            'enhanced_content' => $result,
+            'action' => $request->action,
+        ]);
     }
 }

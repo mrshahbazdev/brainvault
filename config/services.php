@@ -41,4 +41,9 @@ return [
         'embedding_model' => env('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
     ],
 
+    'stripe' => [
+        'pro_price_id' => env('STRIPE_PRO_PRICE_ID'),
+        'team_price_id' => env('STRIPE_TEAM_PRICE_ID'),
+    ],
+
 ];
