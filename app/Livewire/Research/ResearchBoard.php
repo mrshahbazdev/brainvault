@@ -5,7 +5,6 @@ namespace App\Livewire\Research;
 use App\Models\ResearchProject;
 use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Livewire\Component;
 
 class ResearchBoard extends Component
@@ -34,8 +33,7 @@ class ResearchBoard extends Component
 
         ResearchProject::create([
             'user_id' => Auth::id(),
-            'title' => $this->newProjectName,
-            'slug' => Str::slug($this->newProjectName) . '-' . Str::random(4),
+            'name' => $this->newProjectName,
             'description' => $this->newProjectDescription ?: null,
             'status' => 'active',
         ]);
