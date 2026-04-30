@@ -22,4 +22,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Tags API
     Route::apiResource('tags', \App\Http\Controllers\Api\TagController::class);
+
+    // Search & AI
+    Route::get('/search', [\App\Http\Controllers\Api\SearchController::class, 'search']);
+    Route::get('/search/related', [\App\Http\Controllers\Api\SearchController::class, 'related']);
+    Route::post('/ask', [\App\Http\Controllers\Api\SearchController::class, 'ask']);
 });

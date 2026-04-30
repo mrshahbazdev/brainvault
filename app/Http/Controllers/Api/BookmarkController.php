@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessBookmarkAI;
 use App\Models\Bookmark;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,6 +49,9 @@ class BookmarkController extends Controller
         if (!empty($validated['collection_ids'])) {
             $bookmark->collections()->attach($validated['collection_ids']);
         }
+
+        // Dispatch AI processing job
+        ProcessBookmarkAI::dispatch($bookmark->id);
 
         return response()->json($bookmark->load(['tags', 'collections']), 201);
     }

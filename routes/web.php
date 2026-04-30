@@ -8,10 +8,15 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\ImportExportController;
+use App\Http\Controllers\Web\KnowledgeGraphController;
 use App\Http\Controllers\Web\SettingsController;
+use App\Livewire\Analytics\AnalyticsDashboard;
 use App\Livewire\Bookmarks\BookmarkIndex;
 use App\Livewire\Collections\CollectionIndex;
 use App\Livewire\Notes\NoteIndex;
+use App\Livewire\Research\ResearchBoard;
+use App\Livewire\Search\SearchPage;
+use App\Livewire\Teams\TeamIndex;
 use Illuminate\Support\Facades\Route;
 
 // Landing Page
@@ -69,6 +74,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/highlights', function () {
         return view('highlights.index');
     })->name('highlights.index');
+
+    // Search (AI-powered)
+    Route::get('/search', SearchPage::class)->name('search');
+
+    // Analytics
+    Route::get('/analytics', AnalyticsDashboard::class)->name('analytics');
+
+    // Knowledge Graph
+    Route::get('/knowledge-graph', [KnowledgeGraphController::class, 'index'])->name('knowledge-graph');
+
+    // Teams
+    Route::get('/teams', TeamIndex::class)->name('teams.index');
+
+    // Research
+    Route::get('/research', ResearchBoard::class)->name('research.index');
 
     // Settings
     Route::get('/settings', [SettingsController::class, 'profile'])->name('settings.profile');
