@@ -141,7 +141,7 @@
             <main class="p-6">
                 @hasSection('content')
                     @yield('content')
-                @else
+                @elseif(isset($slot))
                     {{ $slot }}
                 @endif
             </main>
