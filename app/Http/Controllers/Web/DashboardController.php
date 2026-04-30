@@ -22,20 +22,16 @@ class DashboardController extends Controller
             ];
         });
 
-        $recentBookmarks = Cache::remember("recent_bookmarks_{$user->id}", 300, function () use ($user) {
-            return $user->bookmarks()
-                ->latest()
-                ->take(8)
-                ->get();
-        });
+        $recentBookmarks = $user->bookmarks()
+            ->latest()
+            ->take(8)
+            ->get();
 
-        $recentNotes = Cache::remember("recent_notes_{$user->id}", 300, function () use ($user) {
-            return $user->notes()
-                ->where('is_trashed', false)
-                ->latest()
-                ->take(5)
-                ->get();
-        });
+        $recentNotes = $user->notes()
+            ->where('is_trashed', false)
+            ->latest()
+            ->take(5)
+            ->get();
 
         return view('dashboard.index', compact('stats', 'recentBookmarks', 'recentNotes'));
     }
