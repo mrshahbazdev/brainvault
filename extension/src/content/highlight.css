@@ -1,0 +1,101 @@
+/* BrainVault Highlight Styles */
+.brainvault-highlight {
+  background-color: rgba(251, 191, 36, 0.3);
+  border-bottom: 2px solid #F59E0B;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 2px;
+}
+
+.brainvault-highlight:hover {
+  background-color: rgba(251, 191, 36, 0.5);
+}
+
+.brainvault-highlight[data-color="yellow"] {
+  background-color: rgba(251, 191, 36, 0.3);
+  border-bottom-color: #F59E0B;
+}
+
+.brainvault-highlight[data-color="green"] {
+  background-color: rgba(34, 197, 94, 0.3);
+  border-bottom-color: #22C55E;
+}
+
+.brainvault-highlight[data-color="blue"] {
+  background-color: rgba(59, 130, 246, 0.3);
+  border-bottom-color: #3B82F6;
+}
+
+.brainvault-highlight[data-color="pink"] {
+  background-color: rgba(236, 72, 153, 0.3);
+  border-bottom-color: #EC4899;
+}
+
+.brainvault-highlight[data-color="purple"] {
+  background-color: rgba(139, 92, 246, 0.3);
+  border-bottom-color: #8B5CF6;
+}
+
+/* Floating Tooltip */
+.brainvault-tooltip {
+  position: fixed;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  animation: brainvault-fadein 0.15s ease-out;
+}
+
+.brainvault-tooltip button {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brainvault-tooltip button:hover {
+  transform: scale(1.1);
+}
+
+.brainvault-tooltip .color-btn {
+  border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.brainvault-tooltip .color-btn:hover {
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.brainvault-tooltip .save-btn {
+  background: #6366F1;
+  color: white;
+  font-weight: 600;
+  padding: 4px 12px;
+  width: auto;
+}
+
+.brainvault-tooltip .save-btn:hover {
+  background: #4F46E5;
+}
+
+@keyframes brainvault-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
