@@ -43,7 +43,8 @@
   ],
   "host_permissions": [
     "http://localhost:8000/*",
-    "https://*.brainvault.app/*"
+    "https://*.brainvault.app/*",
+    "https://*.allocore.de/*"
   ],
   "options_page": "options.html",
   "web_accessible_resources": [

@@ -149,7 +149,7 @@ function App() {
 
         <div class="mt-4 text-center">
           <a
-            href="http://localhost:8000/register"
+            href="https://brainvault.allocore.de/register"
             target="_blank"
             class="text-xs text-indigo-600 hover:text-indigo-700"
           >

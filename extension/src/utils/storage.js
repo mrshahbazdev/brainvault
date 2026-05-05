@@ -1,7 +1,7 @@
 export async function getSettings() {
   const defaults = {
     apiToken: '',
-    apiBaseUrl: 'http://localhost:8000',
+    apiBaseUrl: 'https://brainvault.allocore.de',
     highlightColor: '#FBBF24',
     autoSave: false,
     showSidebar: true,
