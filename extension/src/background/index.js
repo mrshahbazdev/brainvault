@@ -3,6 +3,39 @@ import { api } from '../utils/api.js';
 // Initialize API on startup
 api.init();
 
+// Offline queueing
+async function queueOfflineBookmark(data) {
+  const { offlineQueue = [] } = await chrome.storage.local.get('offlineQueue');
+  offlineQueue.push(data);
+  await chrome.storage.local.set({ offlineQueue });
+}
+
+async function processOfflineQueue() {
+  if (!navigator.onLine) return;
+  const { offlineQueue = [] } = await chrome.storage.local.get('offlineQueue');
+  if (offlineQueue.length === 0) return;
+
+  const remainingQueue = [];
+  await api.init();
+  if (!api.isAuthenticated()) return;
+
+  for (const data of offlineQueue) {
+    try {
+      await api.createBookmark(data);
+    } catch (err) {
+      if (!navigator.onLine || err.message.includes('Failed to fetch')) {
+        remainingQueue.push(data);
+      }
+    }
+  }
+
+  await chrome.storage.local.set({ offlineQueue: remainingQueue });
+}
+
+self.addEventListener('online', processOfflineQueue);
+// Process queue when extension starts up or wakes up
+processOfflineQueue();
+
 // Context menu for right-click "Save to BrainVault"
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
@@ -85,7 +118,20 @@ async function handleMessage(message, sender) {
 
   switch (message.type) {
     case 'SAVE_BOOKMARK': {
-      const bookmark = await api.createBookmark(message.data);
+      try {
+        const bookmark = await api.createBookmark(message.data);
+        return { success: true, bookmark };
+      } catch (err) {
+        if (!navigator.onLine || err.message === 'Failed to fetch') {
+          await queueOfflineBookmark(message.data);
+          return { success: true, queued: true };
+        }
+        throw err;
+      }
+    }
+
+    case 'CHECK_URL_SAVED': {
+      const bookmark = await api.checkUrlSaved(message.url);
       return { success: true, bookmark };
     }
 

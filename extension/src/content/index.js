@@ -293,6 +293,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       saveHighlight(message.text, selectedColor);
     }
     sendResponse({ success: true });
+  } else if (message.type === 'GET_SELECTION_TEXT') {
+    const selection = window.getSelection();
+    sendResponse({ text: selection && !selection.isCollapsed ? selection.toString().trim() : '' });
   }
 });
 
