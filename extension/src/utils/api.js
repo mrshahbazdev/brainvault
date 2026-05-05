@@ -68,6 +68,16 @@ class BrainVaultAPI {
     return this.request('GET', '/bookmarks', params);
   }
 
+  async checkUrlSaved(url) {
+    const res = await this.getBookmarks({ search: url });
+    // Filter to ensure exact match on URL
+    if (res && res.data) {
+      const match = res.data.find(b => b.url === url);
+      return match || null;
+    }
+    return null;
+  }
+
   async createBookmark(data) {
     return this.request('POST', '/bookmarks', data);
   }

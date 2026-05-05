@@ -6,10 +6,13 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [offlineQueued, setOfflineQueued] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [tab, setTab] = useState(null);
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState('');
   const [title, setTitle] = useState('');
+  const [tags, setTags] = useState('');
   const [note, setNote] = useState('');
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
@@ -18,11 +21,33 @@ function App() {
     init();
   }, []);
 
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'Enter')) {
+        e.preventDefault();
+        if (authenticated && !saving && !saved) {
+          handleSave();
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [authenticated, saving, saved, tab, title, note, tags, selectedCollection]);
+
   async function init() {
     try {
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
       setTab(activeTab);
       setTitle(activeTab?.title || '');
+
+      try {
+        const selRes = await chrome.tabs.sendMessage(activeTab.id, { type: 'GET_SELECTION_TEXT' });
+        if (selRes && selRes.text) {
+          setNote(selRes.text);
+        }
+      } catch (e) {
+        // Content script might not be injected
+      }
 
       const authRes = await chrome.runtime.sendMessage({ type: 'CHECK_AUTH' });
       setAuthenticated(authRes.authenticated);
@@ -30,6 +55,18 @@ function App() {
       if (authRes.authenticated) {
         const colRes = await chrome.runtime.sendMessage({ type: 'GET_COLLECTIONS' });
         if (colRes.success) setCollections(colRes.collections);
+
+        const saveCheck = await chrome.runtime.sendMessage({ type: 'CHECK_URL_SAVED', url: activeTab.url });
+        if (saveCheck.success && saveCheck.bookmark) {
+          setIsSaved(true);
+          setTitle(saveCheck.bookmark.title || activeTab.title);
+          if (saveCheck.bookmark.tags && saveCheck.bookmark.tags.length > 0) {
+            setTags(saveCheck.bookmark.tags.map(t => t.name).join(', '));
+          }
+          if (saveCheck.bookmark.collections && saveCheck.bookmark.collections.length > 0) {
+            setSelectedCollection(saveCheck.bookmark.collections[0].id.toString());
+          }
+        }
       }
     } catch (e) {
       setError(e.message);
@@ -70,12 +107,18 @@ function App() {
       if (selectedCollection) {
         data.collection_ids = [parseInt(selectedCollection)];
       }
+      if (tags.trim()) {
+        data.tags = tags.split(',').map(t => t.trim()).filter(Boolean);
+      }
 
       const res = await chrome.runtime.sendMessage({ type: 'SAVE_BOOKMARK', data });
       if (res.success) {
         setSaved(true);
-        // Save note if provided
-        if (note.trim()) {
+        if (res.queued) {
+          setOfflineQueued(true);
+        }
+        // Save note if provided and online
+        if (note.trim() && !res.queued && res.bookmark) {
           await chrome.runtime.sendMessage({
             type: 'SAVE_NOTE',
             data: {
@@ -168,14 +211,32 @@ function App() {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 class="text-lg font-bold text-gray-900 mb-1">Saved!</h2>
-        <p class="text-sm text-gray-500 mb-6">Bookmark added to BrainVault</p>
-        <button
-          onClick={() => { setSaved(false); setNote(''); }}
-          class="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors"
-        >
-          Save Another
-        </button>
+        <h2 class="text-lg font-bold text-gray-900 mb-1">
+          {offlineQueued ? 'Queued Offline!' : (isSaved ? 'Updated!' : 'Saved!')}
+        </h2>
+        <p class="text-sm text-gray-500 mb-6">
+          {offlineQueued 
+            ? 'Bookmark will sync when internet is restored' 
+            : 'Bookmark safely stored in BrainVault'}
+        </p>
+        <div class="flex flex-col gap-2 w-full max-w-[200px]">
+          {!offlineQueued && (
+            <a
+              href="https://brainvault.allocore.de/dashboard"
+              target="_blank"
+              class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+            >
+              View in BrainVault
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+            </a>
+          )}
+          <button
+            onClick={() => { setSaved(false); setNote(''); setIsSaved(true); setOfflineQueued(false); }}
+            class="w-full px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors"
+          >
+            Close
+          </button>
+        </div>
       </div>
     );
   }
@@ -242,6 +303,17 @@ function App() {
         </div>
 
         <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Tags (comma separated)</label>
+          <input
+            type="text"
+            value={tags}
+            onInput={(e) => setTags(e.target.value)}
+            placeholder="e.g. design, inspiration, ai"
+            class="w-full px-3 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          />
+        </div>
+
+        <div>
           <label class="block text-xs font-medium text-gray-700 mb-1">Quick Note (optional)</label>
           <textarea
             value={note}
@@ -263,6 +335,7 @@ function App() {
       <button
         onClick={handleSave}
         disabled={saving}
+        title="Cmd/Ctrl + Enter to save"
         class="w-full mt-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
       >
         {saving ? (
@@ -272,10 +345,12 @@ function App() {
           </>
         ) : (
           <>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-            Save Bookmark
+            {isSaved ? (
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            ) : (
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+            )}
+            {isSaved ? 'Update Bookmark' : 'Save Bookmark'}
           </>
         )}
       </button>
