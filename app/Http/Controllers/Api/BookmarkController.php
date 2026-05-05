@@ -59,16 +59,26 @@ class BookmarkController extends Controller
             'tags.*' => ['string', 'max:100'],
         ]);
 
-        $bookmark = Auth::user()->bookmarks()->create($validated);
+        $bookmark = Auth::user()->bookmarks()->firstWhere('url', $validated['url']);
+        $isNew = false;
 
-        if (!empty($validated['collection_ids'])) {
-            $bookmark->collections()->attach($validated['collection_ids']);
+        if ($bookmark) {
+            $bookmark->update($validated);
+        } else {
+            $bookmark = Auth::user()->bookmarks()->create($validated);
+            $isNew = true;
         }
 
-        // Dispatch AI processing job
-        ProcessBookmarkAI::dispatch($bookmark->id);
+        if (!empty($validated['collection_ids'])) {
+            $bookmark->collections()->syncWithoutDetaching($validated['collection_ids']);
+        }
 
-        return response()->json($bookmark->load(['tags', 'collections']), 201);
+        if ($isNew) {
+            // Dispatch AI processing job only for new bookmarks
+            ProcessBookmarkAI::dispatch($bookmark->id);
+        }
+
+        return response()->json($bookmark->load(['tags', 'collections']), $isNew ? 201 : 200);
     }
 
     public function show(Bookmark $bookmark): JsonResponse
