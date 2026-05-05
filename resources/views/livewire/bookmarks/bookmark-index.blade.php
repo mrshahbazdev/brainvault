@@ -71,6 +71,8 @@
                     <div class="relative aspect-video bg-gray-100 dark:bg-surface-800">
                         @if($bookmark->og_image_url)
                             <img src="{{ $bookmark->og_image_url }}" alt="" class="w-full h-full object-cover">
+                        @elseif(preg_match('/\.(jpeg|jpg|gif|png|webp|svg)$/i', parse_url($bookmark->url, PHP_URL_PATH)))
+                            <img src="{{ $bookmark->url }}" alt="" class="w-full h-full object-contain bg-gray-900">
                         @else
                             <div class="w-full h-full flex items-center justify-center">
                                 @if($bookmark->favicon_url)
