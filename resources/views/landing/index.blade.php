@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>BrainVault - Your Second Brain for the Web</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
     <meta name="description" content="Save, highlight, annotate, and organize everything you read online. AI-powered bookmark and notes management platform.">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
