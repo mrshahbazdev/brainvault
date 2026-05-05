@@ -111,7 +111,7 @@ function Options() {
             onChange={(e) => updateSetting('apiBaseUrl', e.target.value)}
             class="w-full px-3 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
-          <p class="mt-1 text-xs text-gray-400">Default: http://localhost:8000</p>
+          <p class="mt-1 text-xs text-gray-400">Default: https://brainvault.allocore.de</p>
         </div>
       </section>
 
