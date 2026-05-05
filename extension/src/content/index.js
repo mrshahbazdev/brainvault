@@ -296,6 +296,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === 'GET_SELECTION_TEXT') {
     const selection = window.getSelection();
     sendResponse({ text: selection && !selection.isCollapsed ? selection.toString().trim() : '' });
+  } else if (message.type === 'GET_PAGE_DATA') {
+    const selection = window.getSelection();
+    const selectedText = selection && !selection.isCollapsed ? selection.toString().trim() : '';
+    
+    let bodyText = '';
+    try {
+      const clone = document.body.cloneNode(true);
+      clone.querySelectorAll('script, style, nav, footer, iframe, noscript').forEach(el => el.remove());
+      bodyText = clone.innerText.replace(/\s+/g, ' ').trim().substring(0, 5000);
+    } catch (e) {}
+
+    let videoTimestamp = null;
+    if (window.location.hostname.includes('youtube.com')) {
+      const video = document.querySelector('video');
+      if (video && !isNaN(video.currentTime)) {
+        videoTimestamp = Math.floor(video.currentTime);
+      }
+    }
+
+    sendResponse({ selectedText, bodyText, videoTimestamp });
   }
 });
 

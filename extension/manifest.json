@@ -21,6 +21,9 @@
   "side_panel": {
     "default_path": "sidebar.html"
   },
+  "omnibox": {
+    "keyword": "bv"
+  },
   "background": {
     "service_worker": "src/background/index.js",
     "type": "module"
@@ -39,7 +42,8 @@
     "activeTab",
     "contextMenus",
     "sidePanel",
-    "notifications"
+    "notifications",
+    "alarms"
   ],
   "host_permissions": [
     "http://localhost:8000/*",

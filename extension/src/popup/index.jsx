@@ -8,6 +8,9 @@ function App() {
   const [saved, setSaved] = useState(false);
   const [offlineQueued, setOfflineQueued] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [remindLater, setRemindLater] = useState(false);
+  const [pageText, setPageText] = useState('');
   const [tab, setTab] = useState(null);
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState('');
@@ -36,17 +39,32 @@ function App() {
 
   async function init() {
     try {
+      const { bvDarkMode } = await chrome.storage.local.get('bvDarkMode');
+      if (bvDarkMode) setDarkMode(true);
+
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      let finalUrl = activeTab?.url || '';
       setTab(activeTab);
       setTitle(activeTab?.title || '');
 
       try {
-        const selRes = await chrome.tabs.sendMessage(activeTab.id, { type: 'GET_SELECTION_TEXT' });
-        if (selRes && selRes.text) {
-          setNote(selRes.text);
+        const pageData = await chrome.tabs.sendMessage(activeTab.id, { type: 'GET_PAGE_DATA' });
+        if (pageData) {
+          if (pageData.selectedText) setNote(pageData.selectedText);
+          if (pageData.bodyText) setPageText(pageData.bodyText);
+          if (pageData.videoTimestamp) {
+            const urlObj = new URL(finalUrl);
+            urlObj.searchParams.set('t', `${pageData.videoTimestamp}s`);
+            finalUrl = urlObj.toString();
+            setTab({ ...activeTab, url: finalUrl });
+          }
         }
       } catch (e) {
-        // Content script might not be injected
+        // Fallback
+        try {
+          const selRes = await chrome.tabs.sendMessage(activeTab.id, { type: 'GET_SELECTION_TEXT' });
+          if (selRes && selRes.text) setNote(selRes.text);
+        } catch (err) {}
       }
 
       const authRes = await chrome.runtime.sendMessage({ type: 'CHECK_AUTH' });
@@ -56,7 +74,7 @@ function App() {
         const colRes = await chrome.runtime.sendMessage({ type: 'GET_COLLECTIONS' });
         if (colRes.success) setCollections(colRes.collections);
 
-        const saveCheck = await chrome.runtime.sendMessage({ type: 'CHECK_URL_SAVED', url: activeTab.url });
+        const saveCheck = await chrome.runtime.sendMessage({ type: 'CHECK_URL_SAVED', url: finalUrl });
         if (saveCheck.success && saveCheck.bookmark) {
           setIsSaved(true);
           setTitle(saveCheck.bookmark.title || activeTab.title);
@@ -103,6 +121,7 @@ function App() {
       const data = {
         url: tab.url,
         title: title || tab.title,
+        description: pageText,
       };
       if (selectedCollection) {
         data.collection_ids = [parseInt(selectedCollection)];
@@ -116,6 +135,9 @@ function App() {
         setSaved(true);
         if (res.queued) {
           setOfflineQueued(true);
+        }
+        if (remindLater) {
+          await chrome.runtime.sendMessage({ type: 'SET_REMINDER', delayInMinutes: 2880 }); // 48h
         }
         // Save note if provided and online
         if (note.trim() && !res.queued && res.bookmark) {
@@ -137,6 +159,12 @@ function App() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function toggleDarkMode() {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    chrome.storage.local.set({ bvDarkMode: newMode });
   }
 
   if (loading) {
@@ -242,30 +270,36 @@ function App() {
   }
 
   return (
-    <div class="p-4 min-h-[480px] flex flex-col">
-      {/* Header */}
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
+    <div class={`${darkMode ? 'dark' : ''}`}>
+      <div class="p-4 min-h-[480px] flex flex-col bg-white dark:bg-gray-900 transition-colors">
+        {/* Header */}
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </div>
+            <h1 class="text-sm font-bold text-gray-900 dark:text-white">Save Bookmark</h1>
           </div>
-          <h1 class="text-sm font-bold text-gray-900">Save Bookmark</h1>
+          <div class="flex items-center gap-3">
+            <button onClick={toggleDarkMode} class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200">
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+            <button
+              onClick={async () => {
+                await chrome.runtime.sendMessage({ type: 'LOGOUT' });
+                setAuthenticated(false);
+              }}
+              class="text-xs text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Logout
+            </button>
+          </div>
         </div>
-        <button
-          onClick={async () => {
-            await chrome.runtime.sendMessage({ type: 'LOGOUT' });
-            setAuthenticated(false);
-          }}
-          class="text-xs text-gray-400 hover:text-gray-600"
-        >
-          Logout
-        </button>
-      </div>
 
       {/* Page Preview */}
-      <div class="bg-gray-50 rounded-xl p-3 mb-4">
+      <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 mb-4 transition-colors">
         <div class="flex items-start gap-2">
           {tab?.favIconUrl && (
             <img src={tab.favIconUrl} alt="" class="w-4 h-4 rounded mt-0.5" />
@@ -279,21 +313,21 @@ function App() {
       {/* Form */}
       <div class="space-y-3 flex-1">
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
           <input
             type="text"
             value={title}
             onInput={(e) => setTitle(e.target.value)}
-            class="w-full px-3 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-white border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-colors"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Collection</label>
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Collection</label>
           <select
             value={selectedCollection}
             onChange={(e) => setSelectedCollection(e.target.value)}
-            class="w-full px-3 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-white border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-colors"
           >
             <option value="">No collection</option>
             {collections.map(c => (
@@ -303,25 +337,36 @@ function App() {
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Tags (comma separated)</label>
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Tags (comma separated)</label>
           <input
             type="text"
             value={tags}
             onInput={(e) => setTags(e.target.value)}
             placeholder="e.g. design, inspiration, ai"
-            class="w-full px-3 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-white border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-colors"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Quick Note (optional)</label>
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Quick Note (optional)</label>
           <textarea
             value={note}
             onInput={(e) => setNote(e.target.value)}
             placeholder="Add a note about this page..."
             rows="3"
-            class="w-full px-3 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
+            class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-white border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none transition-colors"
           />
+        </div>
+
+        <div class="flex items-center gap-2 mt-2">
+          <input 
+            type="checkbox" 
+            id="remind" 
+            checked={remindLater}
+            onChange={(e) => setRemindLater(e.target.checked)}
+            class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+          />
+          <label for="remind" class="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">Remind me to read this on weekend</label>
         </div>
 
         {error && (
@@ -354,6 +399,7 @@ function App() {
           </>
         )}
       </button>
+      </div>
     </div>
   );
 }
