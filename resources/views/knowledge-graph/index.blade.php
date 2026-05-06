@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Knowledge Graph')
+@section('title', __('Knowledge Graph'))
 
 @section('content')
 <div>
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Knowledge Graph</h1>
-            <p class="text-sm text-gray-500 mt-1">Visual connections between your saved knowledge</p>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Knowledge Graph') }}</h1>
+            <p class="text-sm text-gray-500 mt-1">{{ __('Visual connections between your saved knowledge') }}</p>
         </div>
         <div class="flex items-center gap-2">
             <button id="zoom-in" class="p-2 bg-gray-100 dark:bg-surface-800 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors">
@@ -28,10 +28,10 @@
 
     {{-- Legend --}}
     <div class="mt-4 flex items-center gap-4 text-sm text-gray-500">
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span> Bookmarks</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-green-500"></span> Notes</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-500"></span> Topics</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Tags</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span>{{ __('Bookmarks') }}</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-green-500"></span>{{ __('Notes') }}</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-500"></span>{{ __('Topics') }}</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span>{{ __('Tags') }}</span>
     </div>
 </div>
 @endsection
@@ -54,8 +54,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <svg class="w-16 h-16 text-gray-200 dark:text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Building Your Knowledge Graph</h3>
-                <p class="text-sm text-gray-500 max-w-md text-center">Save more bookmarks and notes to see connections appear. AI will automatically detect topics and relationships.</p>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">${@json(__('Building Your Knowledge Graph'))}</h3>
+                <p class="text-sm text-gray-500 max-w-md text-center">${@json(__('Save more bookmarks and notes to see connections appear. AI will automatically detect topics and relationships.'))}</p>
             </div>
         `;
         return;
