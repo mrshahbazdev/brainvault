@@ -1,5 +1,5 @@
 <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Research Projects') }}</h1>
             <p class="text-sm text-gray-500 mt-1">{{ __('Organize your research with Kanban boards') }}</p>
@@ -19,7 +19,7 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-x-auto">
                 @foreach(['todo' => __('To Do'), 'in_progress' => __('In Progress'), 'done' => __('Done')] as $status => $label)
                     <div class="bg-gray-50 dark:bg-surface-800/50 rounded-2xl p-4 min-h-[200px]">
                         <div class="flex items-center justify-between mb-3">

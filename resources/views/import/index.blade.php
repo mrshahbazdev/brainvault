@@ -26,7 +26,7 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Source') }}</label>
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         @foreach(['chrome' => ['Chrome / Firefox', 'HTML bookmark file'], 'pocket' => ['Pocket', 'JSON export'], 'raindrop' => ['Raindrop.io', 'JSON export']] as $source => [$name, $desc])
                             <label class="relative cursor-pointer">
                                 <input type="radio" name="source" value="{{ $source }}" class="peer sr-only" {{ $source === 'chrome' ? 'checked' : '' }}>
@@ -66,7 +66,7 @@
     <div class="bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('Export Bookmarks') }}</h2>
         <p class="text-sm text-gray-500 mb-4">{{ __('Download all your bookmarks in your preferred format.') }}</p>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
             <a href="{{ route('export.json') }}" class="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-surface-800 hover:bg-gray-200 dark:hover:bg-surface-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 {{ __('Export JSON') }}

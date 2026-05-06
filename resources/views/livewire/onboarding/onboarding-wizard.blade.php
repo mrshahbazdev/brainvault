@@ -11,7 +11,7 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-surface-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl p-8">
+        <div class="bg-white dark:bg-surface-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl p-5 sm:p-8">
             {{-- Step 1: Profile --}}
             @if($step === 1)
                 <div class="text-center mb-8">
@@ -57,7 +57,7 @@
                     <p class="text-gray-500 mt-2">{{ __('Pick your preferred appearance') }}</p>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     @foreach(['light' => __('Light'), 'dark' => __('Dark'), 'system' => __('System')] as $value => $label)
                         <button wire:click="$set('theme', '{{ $value }}')"
                                 class="p-4 rounded-2xl border-2 transition-all {{ $theme === $value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300' }}">

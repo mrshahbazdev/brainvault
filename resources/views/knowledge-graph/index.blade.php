@@ -4,7 +4,7 @@
 
 @section('content')
 <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Knowledge Graph') }}</h1>
             <p class="text-sm text-gray-500 mt-1">{{ __('Visual connections between your saved knowledge') }}</p>
@@ -22,12 +22,12 @@
         </div>
     </div>
 
-    <div class="bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden" style="height: 600px;">
+    <div class="bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden" style="height: clamp(300px, 60vh, 600px);">
         <div id="knowledge-graph" class="w-full h-full"></div>
     </div>
 
     {{-- Legend --}}
-    <div class="mt-4 flex items-center gap-4 text-sm text-gray-500">
+    <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span>{{ __('Bookmarks') }}</span>
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-green-500"></span>{{ __('Notes') }}</span>
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-500"></span>{{ __('Topics') }}</span>
