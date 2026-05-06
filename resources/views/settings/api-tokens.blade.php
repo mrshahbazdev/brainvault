@@ -71,6 +71,12 @@
         @else
             <p class="text-sm text-gray-500 text-center py-4">{{ __('No API tokens yet. Create one to connect the Chrome extension.') }}</p>
         @endif
+
+        @if($tokens->hasPages())
+            <div class="mt-4">
+                {{ $tokens->links() }}
+            </div>
+        @endif
     </div>
 </div>
 @endsection

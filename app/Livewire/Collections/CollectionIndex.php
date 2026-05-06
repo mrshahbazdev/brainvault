@@ -6,9 +6,11 @@ use App\Models\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class CollectionIndex extends Component
 {
+    use WithPagination;
     public bool $showCreateModal = false;
     public bool $showEditModal = false;
 
@@ -99,7 +101,7 @@ class CollectionIndex extends Component
                 ->with(['children' => fn ($q) => $q->withCount('bookmarks')])
                 ->orderBy('sort_order')
                 ->orderBy('name')
-                ->get(),
+                ->paginate(12),
             'colors' => $this->colors,
         ])->layout('layouts.app', ['title' => 'Collections']);
     }

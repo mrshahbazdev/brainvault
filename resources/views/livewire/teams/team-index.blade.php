@@ -45,6 +45,13 @@
                 </div>
             @endforeach
         </div>
+
+        {{-- Pagination --}}
+        @if($ownedTeams->hasPages())
+            <div class="mt-6 mb-8">
+                {{ $ownedTeams->links() }}
+            </div>
+        @endif
     @else
         <div class="bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 text-center">
             <div class="w-14 h-14 bg-gray-100 dark:bg-surface-800 rounded-2xl flex items-center justify-center mx-auto mb-4">

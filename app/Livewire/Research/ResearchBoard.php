@@ -6,9 +6,11 @@ use App\Models\ResearchProject;
 use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ResearchBoard extends Component
 {
+    use WithPagination;
     public bool $showProjectModal = false;
     public bool $showTaskModal = false;
     public string $newProjectName = '';
@@ -93,7 +95,7 @@ class ResearchBoard extends Component
         $projects = Auth::user()->researchProjects()
             ->with(['tasks' => fn ($q) => $q->orderBy('priority')])
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(6);
 
         return view('livewire.research.research-board', [
             'projects' => $projects,
