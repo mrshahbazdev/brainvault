@@ -42,7 +42,8 @@ Route::get('/docs', function () {
 Route::get('/language/{locale}', function (string $locale) {
     if (in_array($locale, ['en', 'de'])) {
         session(['locale' => $locale]);
-        return redirect()->back()->withCookie(cookie('locale', $locale, 60 * 24 * 365));
+        $cookie = cookie('locale', $locale, 60 * 24 * 365, '/', null, false, false);
+        return redirect()->back()->withCookie($cookie);
     }
     return redirect()->back();
 })->name('language.switch');
