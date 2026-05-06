@@ -37,6 +37,13 @@ class BookmarkIndex extends Component
     public array $selected = [];
     public bool $selectAll = false;
 
+    public function mount(): void
+    {
+        if (request()->boolean('create')) {
+            $this->showCreateModal = true;
+        }
+    }
+
     public function updatedSearch(): void
     {
         $this->resetPage();
