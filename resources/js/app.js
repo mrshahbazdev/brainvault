@@ -75,4 +75,36 @@ document.addEventListener('alpine:init', () => {
         },
         destroy() { this.editor?.destroy(); },
     }));
+
+    // Drag and Drop Alpine component for bookmarks to collections
+    Alpine.data('bookmarkDragDrop', () => ({
+        dragging: null,
+        dragOver: null,
+        handleDragStart(e, bookmarkId) {
+            this.dragging = bookmarkId;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', bookmarkId);
+        },
+        handleDragEnd() {
+            this.dragging = null;
+            this.dragOver = null;
+        },
+        handleDragOver(e, collectionId) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.dragOver = collectionId;
+        },
+        handleDragLeave() {
+            this.dragOver = null;
+        },
+        handleDrop(e, collectionId) {
+            e.preventDefault();
+            const bookmarkId = e.dataTransfer.getData('text/plain');
+            this.dragOver = null;
+            this.dragging = null;
+            if (bookmarkId && collectionId) {
+                this.$wire.moveBookmarkToCollection(parseInt(bookmarkId), collectionId);
+            }
+        },
+    }));
 });

@@ -3,10 +3,62 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ __('Search') }}</h1>
 
         {{-- Search Input --}}
-        <div class="relative mb-6">
+        <div class="relative mb-4">
             <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input wire:model.live.debounce.300ms="query" type="text" placeholder="{{ __('Search bookmarks, notes, highlights...') }}"
                    class="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-surface-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-base text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent shadow-sm">
+        </div>
+
+        {{-- Advanced Filters Toggle --}}
+        <div class="mb-6">
+            <button wire:click="toggleAdvancedFilters" class="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                <svg class="w-4 h-4 transition-transform {{ $showAdvancedFilters ? 'rotate-90' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                {{ __('Advanced Filters') }}
+            </button>
+
+            @if($showAdvancedFilters)
+                <div class="mt-3 p-4 bg-white dark:bg-surface-900 border border-gray-200 dark:border-gray-800 rounded-2xl">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ __('Date From') }}</label>
+                            <input wire:model.live="dateFrom" type="date" class="w-full px-3 py-2 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ __('Date To') }}</label>
+                            <input wire:model.live="dateTo" type="date" class="w-full px-3 py-2 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ __('Domain') }}</label>
+                            <input wire:model.live.debounce.300ms="domain" type="text" placeholder="github.com" class="w-full px-3 py-2 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ __('Tag') }}</label>
+                            <input wire:model.live.debounce.300ms="tagFilter" type="text" placeholder="{{ __('Filter by tag') }}" class="w-full px-3 py-2 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ __('Read Status') }}</label>
+                            <select wire:model.live="readStatus" class="w-full px-3 py-2 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                                <option value="">{{ __('All') }}</option>
+                                <option value="read">{{ __('Read') }}</option>
+                                <option value="unread">{{ __('Unread') }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">{{ __('Category') }}</label>
+                            <select wire:model.live="category" class="w-full px-3 py-2 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                                <option value="">{{ __('All Categories') }}</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-4">
+                        <button wire:click="search" class="px-4 py-2 text-sm font-medium bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors">{{ __('Apply Filters') }}</button>
+                        <button wire:click="clearFilters" class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">{{ __('Clear') }}</button>
+                    </div>
+                </div>
+            @endif
         </div>
 
         {{-- Type Filters --}}
@@ -37,12 +89,27 @@
             </div>
         @endif
 
+        {{-- Related Content Suggestions --}}
+        @if(!empty($relatedSuggestions))
+            <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl">
+                <h3 class="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-2">{{ __('Related Categories — You might also like:') }}</h3>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($relatedSuggestions as $suggestion)
+                        <button wire:click="$set('category', '{{ $suggestion }}')" wire:click.self="search"
+                                class="px-3 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 transition-colors">
+                            {{ $suggestion }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- Results --}}
-        @if(!empty($query) && strlen($query) >= 2)
+        @if(!empty($query) && strlen($query) >= 2 || $showAdvancedFilters)
             {{-- Bookmarks --}}
-            @if(($type === 'all' || $type === 'bookmarks') && !empty($results['bookmarks']) && $results['bookmarks']->count() > 0)
+            @if(($type === 'all' || $type === 'bookmarks') && !empty($results['bookmarks']) && count($results['bookmarks']) > 0)
                 <div class="mb-6">
-                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Bookmarks ({{ $results['bookmarks']->count() }})</h2>
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{{ __('Bookmarks') }} ({{ count($results['bookmarks']) }})</h2>
                     <div class="space-y-2">
                         @foreach($results['bookmarks'] as $bookmark)
                             <a href="{{ $bookmark->url }}" target="_blank" class="block p-4 bg-white dark:bg-surface-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
@@ -59,16 +126,14 @@
                                             <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{{ $bookmark->description }}</p>
                                         @endif
                                         @if($bookmark->tags->count() > 0)
-                                            <div class="flex items-center gap-1 mt-2">
-                                                @foreach($bookmark->tags->take(3) as $tag)
-                                                    <span class="px-2 py-0.5 text-[10px] font-medium bg-gray-100 dark:bg-surface-800 text-gray-600 dark:text-gray-400 rounded-full">{{ $tag->name }}</span>
+                                            <div class="flex flex-wrap gap-1 mt-2">
+                                                @foreach($bookmark->tags->take(5) as $tag)
+                                                    <span class="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 dark:bg-surface-800 text-gray-600 dark:text-gray-400 rounded-md">{{ $tag->name }}</span>
                                                 @endforeach
                                             </div>
                                         @endif
                                     </div>
-                                    @if($bookmark->ai_category)
-                                        <span class="px-2 py-1 text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg whitespace-nowrap">{{ $bookmark->ai_category }}</span>
-                                    @endif
+                                    <span class="text-xs text-gray-400 whitespace-nowrap">{{ $bookmark->created_at->diffForHumans() }}</span>
                                 </div>
                             </a>
                         @endforeach
@@ -77,46 +142,20 @@
             @endif
 
             {{-- Notes --}}
-            @if(($type === 'all' || $type === 'notes') && !empty($results['notes']) && $results['notes']->count() > 0)
+            @if(($type === 'all' || $type === 'notes') && !empty($results['notes']) && count($results['notes']) > 0)
                 <div class="mb-6">
-                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Notes ({{ $results['notes']->count() }})</h2>
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{{ __('Notes') }} ({{ count($results['notes']) }})</h2>
                     <div class="space-y-2">
                         @foreach($results['notes'] as $note)
-                            <div class="p-4 bg-white dark:bg-surface-900 border border-gray-200 dark:border-gray-800 rounded-xl {{ $note->color ? 'border-l-4' : '' }}" @if($note->color) style="border-left-color: {{ $note->color }}" @endif>
-                                <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ $note->title ?? __('Untitled') }}</h3>
-                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-3">{{ Str::limit($note->content_plain ?? strip_tags($note->content ?? ''), 200) }}</p>
-                                <div class="flex items-center gap-2 mt-2">
-                                    <span class="text-[10px] text-gray-400">{{ $note->updated_at->diffForHumans() }}</span>
-                                    @if($note->note_type)
-                                        <span class="px-2 py-0.5 text-[10px] font-medium bg-gray-100 dark:bg-surface-800 text-gray-500 rounded-full">{{ $note->note_type }}</span>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            {{-- Semantic Results --}}
-            @if(($type === 'all') && !empty($results['semantic']) && count($results['semantic']) > 0)
-                <div class="mb-6">
-                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                        <span class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                            {{ __('AI-Powered Results') }}
-                        </span>
-                    </h2>
-                    <div class="space-y-2">
-                        @foreach($results['semantic'] as $result)
-                            <div class="p-4 bg-purple-50/50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800/50 rounded-xl">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="px-2 py-0.5 text-[10px] font-semibold {{ $result['type'] === 'bookmark' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' }} rounded-full">{{ ucfirst($result['type']) }}</span>
-                                    <span class="text-[10px] text-gray-400">{{ round($result['similarity'] * 100) }}% {{ __('match') }}</span>
-                                </div>
-                                @if($result['type'] === 'bookmark')
-                                    <a href="{{ $result['item']->url }}" target="_blank" class="text-sm font-medium text-gray-900 dark:text-white hover:text-primary-600">{{ $result['item']->title ?? $result['item']->url }}</a>
-                                @else
-                                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ $result['item']->title ?? __('Untitled') }}</h3>
+                            <div class="p-4 bg-white dark:bg-surface-900 border border-gray-200 dark:border-gray-800 rounded-xl">
+                                <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ $note->title ?? 'Untitled Note' }}</h3>
+                                <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ Str::limit($note->content_plain ?? '', 200) }}</p>
+                                @if($note->tags->count() > 0)
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        @foreach($note->tags->take(3) as $tag)
+                                            <span class="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 dark:bg-surface-800 text-gray-600 dark:text-gray-400 rounded-md">{{ $tag->name }}</span>
+                                        @endforeach
+                                    </div>
                                 @endif
                             </div>
                         @endforeach
@@ -124,23 +163,13 @@
                 </div>
             @endif
 
-            {{-- No Results --}}
-            @if(
-                (empty($results['bookmarks']) || $results['bookmarks']->count() === 0) &&
-                (empty($results['notes']) || $results['notes']->count() === 0) &&
-                (empty($results['semantic']) || count($results['semantic']) === 0)
-            )
-                <div class="text-center py-12">
-                    <svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    <p class="text-sm text-gray-500">{{ __('No results found for') }} "{{ $query }}"</p>
+            @if(empty($results) || (empty($results['bookmarks']) && empty($results['notes'])))
+                <div class="py-16 text-center">
+                    <svg class="mx-auto w-16 h-16 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">{{ __('No results found') }}</h3>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('Try adjusting your search or filters.') }}</p>
                 </div>
             @endif
-        @else
-            <div class="text-center py-16">
-                <svg class="w-16 h-16 text-gray-200 dark:text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">{{ __('Search your knowledge') }}</h2>
-                <p class="text-sm text-gray-500">{{ __('Search across bookmarks, notes, and highlights') }}</p>
-            </div>
         @endif
     </div>
 </div>

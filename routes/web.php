@@ -20,6 +20,11 @@ use App\Livewire\Onboarding\OnboardingWizard;
 use App\Livewire\Research\ResearchBoard;
 use App\Livewire\Search\SearchPage;
 use App\Livewire\Teams\TeamIndex;
+use App\Livewire\Teams\TeamActivityFeed;
+use App\Livewire\Tags\TagManagement;
+use App\Livewire\ReadingList\ReadingListIndex;
+use App\Livewire\Trash\TrashIndex;
+use App\Livewire\Export\ExportPage;
 use Illuminate\Support\Facades\Route;
 
 // Landing Page
@@ -113,6 +118,19 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureOnboardingCompleted::class
 
     // Teams
     Route::get('/teams', TeamIndex::class)->name('teams.index');
+    Route::get('/teams/{teamId}/activity', TeamActivityFeed::class)->name('teams.activity');
+
+    // Reading List
+    Route::get('/reading-list', ReadingListIndex::class)->name('reading-list');
+
+    // Trash
+    Route::get('/trash', TrashIndex::class)->name('trash');
+
+    // Tags Management
+    Route::get('/tags', TagManagement::class)->name('tags.index');
+
+    // Export
+    Route::get('/export', ExportPage::class)->name('export');
 
     // Research
     Route::get('/research', ResearchBoard::class)->name('research.index');
@@ -134,3 +152,20 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureOnboardingCompleted::class
     Route::get('/export/json', [ImportExportController::class, 'exportJson'])->name('export.json');
     Route::get('/export/html', [ImportExportController::class, 'exportHtml'])->name('export.html');
 });
+
+// Public sharing routes (no auth required)
+Route::get('/share/collection/{slug}', function (string $slug) {
+    $collection = \App\Models\Collection::where('share_slug', $slug)
+        ->where('visibility', 'public')
+        ->with(['bookmarks.tags'])
+        ->firstOrFail();
+    return view('public.shared-collection', compact('collection'));
+})->name('public.collection');
+
+Route::get('/share/bookmark/{token}', function (string $token) {
+    $bookmark = \App\Models\Bookmark::where('share_token', $token)
+        ->where('is_trashed', false)
+        ->with('tags')
+        ->firstOrFail();
+    return view('public.shared-bookmark', compact('bookmark'));
+})->name('public.bookmark');

@@ -19,6 +19,7 @@ class SendWeeklyDigest extends Command
     {
         $users = User::whereNotNull('email_verified_at')
             ->where('last_active_at', '>=', now()->subDays(30))
+            ->where('weekly_digest_enabled', true)
             ->cursor();
 
         $count = 0;
@@ -36,6 +37,14 @@ class SendWeeklyDigest extends Command
                 'total_words_read' => Bookmark::where('user_id', $user->id)
                     ->where('read_at', '>=', $weekStart)
                     ->sum('word_count') ?? 0,
+                'unread_count' => Bookmark::where('user_id', $user->id)
+                    ->where('is_trashed', false)
+                    ->where('is_read', false)
+                    ->count(),
+                'read_later_count' => Bookmark::where('user_id', $user->id)
+                    ->where('is_trashed', false)
+                    ->where('is_read_later', true)
+                    ->count(),
             ];
 
             if ($stats['new_bookmarks'] === 0 && $stats['new_notes'] === 0) {

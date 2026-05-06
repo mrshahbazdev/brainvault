@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Models\Team;
 
 class Collection extends Model
 {
@@ -68,5 +69,17 @@ class Collection extends Model
     {
         return $this->belongsToMany(Bookmark::class)
             ->withPivot('sort_order', 'added_at');
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'collection_team')
+            ->withPivot('permission', 'shared_by')
+            ->withTimestamps();
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->visibility === 'public' && !empty($this->share_slug);
     }
 }

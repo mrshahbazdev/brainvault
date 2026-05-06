@@ -38,4 +38,16 @@ class Team extends Model
         return $this->belongsToMany(User::class, 'team_members')
             ->withPivot('role', 'joined_at');
     }
+
+    public function sharedCollections(): BelongsToMany
+    {
+        return $this->belongsToMany(Collection::class, 'collection_team')
+            ->withPivot('permission', 'shared_by')
+            ->withTimestamps();
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(TeamActivity::class);
+    }
 }
