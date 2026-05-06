@@ -120,6 +120,20 @@ function highlightSelection(text, color) {
 async function saveHighlight(text, color) {
   if (!selectedRange) return;
 
+  // Check authentication first
+  try {
+    const authCheck = await chrome.runtime.sendMessage({ type: 'CHECK_AUTH' });
+    if (!authCheck?.authenticated) {
+      showErrorNotification('Please log in to BrainVault extension first');
+      removeTooltip();
+      return;
+    }
+  } catch (e) {
+    showErrorNotification('BrainVault extension error — try reloading the page');
+    removeTooltip();
+    return;
+  }
+
   const data = {
     text,
     color: HIGHLIGHT_COLORS.find(c => c.name === color)?.value || '#FBBF24',
@@ -131,10 +145,7 @@ async function saveHighlight(text, color) {
     surrounding_text: getSurroundingText(selectedRange),
   };
 
-  // First highlight locally
-  highlightSelection(text, color);
-
-  // Then send to background to save via API
+  // Save via API first, then highlight locally on success
   try {
     const response = await chrome.runtime.sendMessage({
       type: 'SAVE_HIGHLIGHT',
@@ -142,9 +153,13 @@ async function saveHighlight(text, color) {
     });
 
     if (response?.success) {
+      highlightSelection(text, color);
       showSavedNotification();
+    } else {
+      showErrorNotification(response?.error || 'Failed to save highlight');
     }
   } catch (e) {
+    showErrorNotification('Failed to save — check your connection');
     console.warn('BrainVault: Failed to save highlight', e);
   }
 }
@@ -210,6 +225,27 @@ function showSavedNotification() {
 
   document.body.appendChild(notification);
   setTimeout(() => notification.remove(), 3000);
+}
+
+function showErrorNotification(msg) {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed; bottom: 20px; right: 20px; z-index: 2147483647;
+    background: #EF4444; color: white; padding: 12px 20px;
+    border-radius: 12px; font-size: 14px; font-family: Inter, sans-serif;
+    box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+    display: flex; align-items: center; gap: 8px;
+    animation: brainvault-fadein 0.2s ease-out;
+  `;
+  notification.innerHTML = `
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+    ${msg}
+  `;
+
+  document.body.appendChild(notification);
+  setTimeout(() => notification.remove(), 5000);
 }
 
 // Render saved highlights on page load
