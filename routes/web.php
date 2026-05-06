@@ -13,6 +13,7 @@ use App\Http\Controllers\Web\SettingsController;
 use App\Livewire\Analytics\AnalyticsDashboard;
 use App\Livewire\Bookmarks\BookmarkIndex;
 use App\Livewire\Collections\CollectionIndex;
+use App\Livewire\Highlights\HighlightIndex;
 use App\Livewire\Notes\NoteIndex;
 use App\Livewire\Billing\BillingPage;
 use App\Livewire\Onboarding\OnboardingWizard;
@@ -82,9 +83,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureOnboardingCompleted::class
     Route::get('/notes', NoteIndex::class)->name('notes.index');
 
     // Highlights
-    Route::get('/highlights', function () {
-        return view('highlights.index');
-    })->name('highlights.index');
+    Route::get('/highlights', HighlightIndex::class)->name('highlights.index');
 
     // Search (AI-powered)
     Route::get('/search', SearchPage::class)->name('search');
