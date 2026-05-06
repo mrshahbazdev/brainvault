@@ -71,12 +71,14 @@
                     <div class="relative aspect-video bg-gray-100 dark:bg-surface-800">
                         @if($bookmark->og_image_url)
                             <img src="{{ $bookmark->og_image_url }}" alt="" class="w-full h-full object-cover">
+                        @elseif(preg_match('/\.(jpeg|jpg|gif|png|webp|svg)$/i', parse_url($bookmark->url, PHP_URL_PATH)))
+                            <img src="{{ $bookmark->url }}" alt="" class="w-full h-full object-contain bg-gray-900">
                         @else
                             <div class="w-full h-full flex items-center justify-center">
                                 @if($bookmark->favicon_url)
-                                    <img src="{{ $bookmark->favicon_url }}" alt="" class="w-8 h-8 rounded" onerror="this.style.display='none'">
+                                    <img src="{{ $bookmark->favicon_url }}" alt="" class="w-16 h-16 rounded shadow-sm" onerror="this.src='https://www.google.com/s2/favicons?domain={{ parse_url($bookmark->url, PHP_URL_HOST) }}&sz=128'">
                                 @else
-                                    <svg class="w-8 h-8 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                    <img src="https://www.google.com/s2/favicons?domain={{ parse_url($bookmark->url, PHP_URL_HOST) }}&sz=128" alt="" class="w-16 h-16 rounded shadow-sm" onerror="this.style.display='none'">
                                 @endif
                             </div>
                         @endif

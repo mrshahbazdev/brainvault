@@ -67,7 +67,6 @@ class Collection extends Model
     public function bookmarks(): BelongsToMany
     {
         return $this->belongsToMany(Bookmark::class)
-            ->withPivot('sort_order', 'added_at')
-            ->withTimestamps();
+            ->withPivot('sort_order', 'added_at');
     }
 }

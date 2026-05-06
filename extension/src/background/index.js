@@ -3,6 +3,39 @@ import { api } from '../utils/api.js';
 // Initialize API on startup
 api.init();
 
+// Offline queueing
+async function queueOfflineBookmark(data) {
+  const { offlineQueue = [] } = await chrome.storage.local.get('offlineQueue');
+  offlineQueue.push(data);
+  await chrome.storage.local.set({ offlineQueue });
+}
+
+async function processOfflineQueue() {
+  if (!navigator.onLine) return;
+  const { offlineQueue = [] } = await chrome.storage.local.get('offlineQueue');
+  if (offlineQueue.length === 0) return;
+
+  const remainingQueue = [];
+  await api.init();
+  if (!api.isAuthenticated()) return;
+
+  for (const data of offlineQueue) {
+    try {
+      await api.createBookmark(data);
+    } catch (err) {
+      if (!navigator.onLine || err.message.includes('Failed to fetch')) {
+        remainingQueue.push(data);
+      }
+    }
+  }
+
+  await chrome.storage.local.set({ offlineQueue: remainingQueue });
+}
+
+self.addEventListener('online', processOfflineQueue);
+// Process queue when extension starts up or wakes up
+processOfflineQueue();
+
 // Context menu for right-click "Save to BrainVault"
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
@@ -55,6 +88,14 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       updateBadge(tab.id);
     }
 
+    if (info.menuItemId === 'save-image-brainvault') {
+      const url = info.srcUrl || info.pageUrl;
+      const title = 'Image from ' + (tab.title || 'Web');
+      await api.createBookmark({ url, title });
+      chrome.notifications.create({ type: 'basic', iconUrl: 'icons/icon-48.png', title: 'BrainVault', message: 'Image saved!' });
+      updateBadge(tab.id);
+    }
+
     if (info.menuItemId === 'save-selection-brainvault' && info.selectionText) {
       // Send message to content script to get selection details
       chrome.tabs.sendMessage(tab.id, {
@@ -85,7 +126,20 @@ async function handleMessage(message, sender) {
 
   switch (message.type) {
     case 'SAVE_BOOKMARK': {
-      const bookmark = await api.createBookmark(message.data);
+      try {
+        const bookmark = await api.createBookmark(message.data);
+        return { success: true, bookmark };
+      } catch (err) {
+        if (!navigator.onLine || err.message === 'Failed to fetch') {
+          await queueOfflineBookmark(message.data);
+          return { success: true, queued: true };
+        }
+        throw err;
+      }
+    }
+
+    case 'CHECK_URL_SAVED': {
+      const bookmark = await api.checkUrlSaved(message.url);
       return { success: true, bookmark };
     }
 
@@ -134,9 +188,62 @@ async function handleMessage(message, sender) {
       return { success: true };
     }
 
+    case 'SET_REMINDER': {
+      // Create alarm for the reminder (delayInMinutes)
+      chrome.alarms.create(`remind-bookmark-${Date.now()}`, { delayInMinutes: message.delayInMinutes || 2880 /* 48 hours */ });
+      return { success: true };
+    }
+
     default:
       return { error: 'Unknown message type' };
   }
+}
+
+// Alarms
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name.startsWith('remind-bookmark-')) {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon-48.png',
+      title: 'BrainVault Reminder',
+      message: 'Time to read a bookmark you saved for later!',
+    });
+  }
+});
+
+// Omnibox
+chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
+  if (!text || text.length < 2) return;
+  await api.init();
+  if (!api.isAuthenticated()) return;
+  
+  try {
+    const res = await api.getBookmarks({ search: text, per_page: 5 });
+    if (res && res.data && res.data.length > 0) {
+      const suggestions = res.data.map(b => ({
+        content: b.url,
+        description: `<match>${escapeXml(b.title || b.url)}</match> - <url>${escapeXml(b.url)}</url>`
+      }));
+      suggest(suggestions);
+    }
+  } catch (e) {}
+});
+
+chrome.omnibox.onInputEntered.addListener((text) => {
+  const url = text.startsWith('http') ? text : `https://brainvault.allocore.de/dashboard?search=${encodeURIComponent(text)}`;
+  chrome.tabs.create({ url });
+});
+
+function escapeXml(unsafe) {
+  return (unsafe || '').replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+    }
+  });
 }
 
 // Update badge with saved status
