@@ -31,6 +31,10 @@ Route::get('/offline', function () {
     return view('offline');
 })->name('offline');
 
+Route::get('/extension', function () {
+    return view('extension.index');
+})->name('extension');
+
 // Auth Routes (Guest only)
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');

@@ -30,6 +30,7 @@
                     <a href="#features" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Features</a>
                     <a href="#how-it-works" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">How it Works</a>
                     <a href="#pricing" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Pricing</a>
+                    <a href="{{ route('extension') }}" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Extension</a>
                 </div>
 
                 {{-- Auth Buttons --}}
@@ -58,6 +59,7 @@
                     <a href="#features" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">Features</a>
                     <a href="#how-it-works" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">How it Works</a>
                     <a href="#pricing" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">Pricing</a>
+                    <a href="{{ route('extension') }}" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">Extension</a>
                     <div class="flex gap-3 pt-2">
                         <a href="{{ route('login') }}" class="flex-1 text-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300">Sign In</a>
                         <a href="{{ route('register') }}" class="flex-1 text-center px-4 py-2 btn-gradient text-sm font-semibold rounded-xl">Get Started</a>
@@ -350,7 +352,7 @@
                     <ul class="space-y-2 text-sm text-gray-500">
                         <li><a href="#features" class="hover:text-gray-700 dark:hover:text-gray-300">Features</a></li>
                         <li><a href="#pricing" class="hover:text-gray-700 dark:hover:text-gray-300">Pricing</a></li>
-                        <li><a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">Chrome Extension</a></li>
+                        <li><a href="{{ route('extension') }}" class="hover:text-gray-700 dark:hover:text-gray-300">Chrome Extension</a></li>
                         <li><a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">API</a></li>
                     </ul>
                 </div>
