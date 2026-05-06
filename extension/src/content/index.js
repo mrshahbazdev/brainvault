@@ -74,12 +74,12 @@ function showTooltip(range, text) {
   tooltip.style.top = `${Math.max(8, top)}px`;
   tooltip.style.left = `${Math.max(8, left)}px`;
 
-  // Color button handlers
+  // Color button handlers - highlight AND save
   tooltip.querySelectorAll('.color-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       selectedColor = btn.dataset.color;
-      highlightSelection(text, selectedColor);
+      saveHighlight(text, selectedColor);
     });
   });
 
@@ -229,8 +229,8 @@ async function renderSavedHighlights() {
 }
 
 function restoreHighlight(highlight) {
-  // Try to find the text node using XPath
-  const result = document.evaluate(
+  // Try to find the start text node using XPath
+  const startResult = document.evaluate(
     highlight.start_xpath,
     document,
     null,
@@ -238,15 +238,32 @@ function restoreHighlight(highlight) {
     null
   );
 
-  const node = result.singleNodeValue;
-  if (!node) return;
+  const startNode = startResult.singleNodeValue;
+  if (!startNode) return;
+
+  const startTextNode = startNode.nodeType === Node.TEXT_NODE ? startNode : startNode.firstChild;
+  if (!startTextNode) return;
+
+  // Find end node (may be same or different)
+  let endTextNode = startTextNode;
+  if (highlight.end_xpath && highlight.end_xpath !== highlight.start_xpath) {
+    const endResult = document.evaluate(
+      highlight.end_xpath,
+      document,
+      null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    );
+    const endNode = endResult.singleNodeValue;
+    if (endNode) {
+      endTextNode = endNode.nodeType === Node.TEXT_NODE ? endNode : endNode.firstChild;
+    }
+  }
+  if (!endTextNode) endTextNode = startTextNode;
 
   const range = document.createRange();
-  const textNode = node.nodeType === Node.TEXT_NODE ? node : node.firstChild;
-  if (!textNode) return;
-
-  range.setStart(textNode, Math.min(highlight.start_offset, textNode.length));
-  range.setEnd(textNode, Math.min(highlight.end_offset, textNode.length));
+  range.setStart(startTextNode, Math.min(highlight.start_offset, startTextNode.length));
+  range.setEnd(endTextNode, Math.min(highlight.end_offset, endTextNode.length));
 
   const mark = document.createElement('mark');
   mark.className = 'brainvault-highlight';
@@ -256,7 +273,14 @@ function restoreHighlight(highlight) {
   try {
     range.surroundContents(mark);
   } catch (e) {
-    // Can't wrap complex selections
+    // Can't wrap complex selections - try alternative approach
+    try {
+      const fragment = range.extractContents();
+      mark.appendChild(fragment);
+      range.insertNode(mark);
+    } catch (e2) {
+      // Silently fail if we can't restore this highlight
+    }
   }
 }
 

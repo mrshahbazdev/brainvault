@@ -74,13 +74,7 @@ class AIService
         return $response ? trim($response) : null;
     }
 
-    public function enhanceNote(string $content): ?string
-    {
-        $prompt = "Improve and organize this note. Fix grammar, add structure with headers if needed, and make it clearer. Keep the same meaning.\n\n";
-        $prompt .= $content;
 
-        return $this->chat($prompt);
-    }
 
     public function generateEmbedding(string $text): ?array
     {
