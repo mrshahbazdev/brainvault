@@ -35,6 +35,14 @@ Route::get('/extension', function () {
     return view('extension.index');
 })->name('extension');
 
+Route::get('/language/{locale}', function (string $locale) {
+    if (in_array($locale, ['en', 'de'])) {
+        session(['locale' => $locale]);
+        return redirect()->back()->withCookie(cookie('locale', $locale, 60 * 24 * 365));
+    }
+    return redirect()->back();
+})->name('language.switch');
+
 // Auth Routes (Guest only)
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
