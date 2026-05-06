@@ -35,6 +35,10 @@ Route::get('/extension', function () {
     return view('extension.index');
 })->name('extension');
 
+Route::get('/docs', function () {
+    return view('docs.index');
+})->name('docs');
+
 Route::get('/language/{locale}', function (string $locale) {
     if (in_array($locale, ['en', 'de'])) {
         session(['locale' => $locale]);
