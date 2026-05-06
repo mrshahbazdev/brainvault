@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bookmark;
+use App\Models\Note;
 use App\Models\Tag;
 use App\Models\Topic;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class KnowledgeGraphController extends Controller
                 'id' => $nodeId,
                 'label' => $topic->name,
                 'type' => 'topic',
-                'size' => 12,
+                'size' => 14,
             ];
             $nodeIndex[$nodeId] = true;
         }
@@ -85,6 +86,47 @@ class KnowledgeGraphController extends Controller
             }
         }
 
+        // Add note nodes (limit to 50 most recent)
+        $notes = Note::where('user_id', $userId)
+            ->where('is_trashed', false)
+            ->with(['tags', 'bookmark'])
+            ->latest()
+            ->limit(50)
+            ->get();
+
+        foreach ($notes as $note) {
+            $nodeId = "note_{$note->id}";
+            $nodes[] = [
+                'id' => $nodeId,
+                'label' => \Str::limit($note->title ?? 'Untitled Note', 30),
+                'type' => 'note',
+                'size' => 8,
+            ];
+            $nodeIndex[$nodeId] = true;
+
+            // Link note to its tags
+            foreach ($note->tags as $tag) {
+                $tagNodeId = "tag_{$tag->id}";
+                if (isset($nodeIndex[$tagNodeId])) {
+                    $links[] = [
+                        'source' => $nodeId,
+                        'target' => $tagNodeId,
+                    ];
+                }
+            }
+
+            // Link note to its parent bookmark
+            if ($note->bookmark_id) {
+                $bookmarkNodeId = "bookmark_{$note->bookmark_id}";
+                if (isset($nodeIndex[$bookmarkNodeId])) {
+                    $links[] = [
+                        'source' => $nodeId,
+                        'target' => $bookmarkNodeId,
+                    ];
+                }
+            }
+        }
+
         // Connect tags that co-occur on same bookmarks
         $tagPairs = [];
         foreach ($bookmarks as $bookmark) {
@@ -97,6 +139,23 @@ class KnowledgeGraphController extends Controller
                         $links[] = [
                             'source' => "tag_{$bookmarkTags[$i]}",
                             'target' => "tag_{$bookmarkTags[$j]}",
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Connect tags that co-occur on same notes
+        foreach ($notes as $note) {
+            $noteTags = $note->tags->pluck('id')->toArray();
+            for ($i = 0; $i < count($noteTags); $i++) {
+                for ($j = $i + 1; $j < count($noteTags); $j++) {
+                    $pair = min($noteTags[$i], $noteTags[$j]) . '_' . max($noteTags[$i], $noteTags[$j]);
+                    if (!isset($tagPairs[$pair])) {
+                        $tagPairs[$pair] = true;
+                        $links[] = [
+                            'source' => "tag_{$noteTags[$i]}",
+                            'target' => "tag_{$noteTags[$j]}",
                         ];
                     }
                 }
