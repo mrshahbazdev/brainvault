@@ -31,6 +31,7 @@
                     <a href="#how-it-works" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{{ __('How it Works') }}</a>
                     <a href="#pricing" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{{ __('Pricing') }}</a>
                     <a href="{{ route('extension') }}" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{{ __('Extension') }}</a>
+                    <a href="{{ route('docs') }}" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{{ __('Docs') }}</a>
                 </div>
 
                 {{-- Auth Buttons --}}
@@ -61,10 +62,24 @@
                     <a href="#how-it-works" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">{{ __('How it Works') }}</a>
                     <a href="#pricing" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">{{ __('Pricing') }}</a>
                     <a href="{{ route('extension') }}" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">{{ __('Extension') }}</a>
+                    <a href="{{ route('docs') }}" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">{{ __('Docs') }}</a>
+                    <div class="flex items-center gap-3 px-3 py-2">
+                        <x-language-switcher />
+                        <button @click="$store.darkMode.toggle()" class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-surface-800 transition-colors">
+                            <svg x-show="!$store.darkMode.on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                            <svg x-show="$store.darkMode.on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        </button>
+                    </div>
+                    @guest
                     <div class="flex gap-3 pt-2">
                         <a href="{{ route('login') }}" class="flex-1 text-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300">{{ __('Sign In') }}</a>
                         <a href="{{ route('register') }}" class="flex-1 text-center px-4 py-2 btn-gradient text-sm font-semibold rounded-xl">{{ __('Get Started') }}</a>
                     </div>
+                    @else
+                    <div class="pt-2">
+                        <a href="{{ route('dashboard') }}" class="block text-center px-4 py-2 btn-gradient text-sm font-semibold rounded-xl">{{ __('Dashboard') }}</a>
+                    </div>
+                    @endguest
                 </div>
             </div>
         </div>
@@ -354,13 +369,13 @@
                         <li><a href="#features" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('Features') }}</a></li>
                         <li><a href="#pricing" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('Pricing') }}</a></li>
                         <li><a href="{{ route('extension') }}" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('Chrome Extension') }}</a></li>
-                        <li><a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('API') }}</a></li>
+                        <li><a href="{{ route('docs') }}#api" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('API') }}</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="font-semibold text-gray-900 dark:text-white mb-4">{{ __('Resources') }}</h4>
                     <ul class="space-y-2 text-sm text-gray-500">
-                        <li><a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('Documentation') }}</a></li>
+                        <li><a href="{{ route('docs') }}" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('Documentation') }}</a></li>
                         <li><a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('Blog') }}</a></li>
                         <li><a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('Changelog') }}</a></li>
                         <li><a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">{{ __('Support') }}</a></li>

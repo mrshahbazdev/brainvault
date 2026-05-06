@@ -12,7 +12,7 @@
 </head>
 <body class="bg-white dark:bg-surface-950 font-sans antialiased overflow-x-hidden">
     {{-- Navigation --}}
-    <nav class="fixed top-0 left-0 right-0 z-50 glass">
+    <nav class="fixed top-0 left-0 right-0 z-50 glass" x-data="{ mobileMenu: false }">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="{{ route('home') }}" class="flex items-center gap-2.5">
@@ -27,6 +27,7 @@
                     <a href="{{ route('home') }}#features" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{{ __('Features') }}</a>
                     <a href="{{ route('home') }}#pricing" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{{ __('Pricing') }}</a>
                     <a href="{{ route('extension') }}" class="text-sm font-medium text-primary-600 dark:text-primary-400">{{ __('Extension') }}</a>
+                    <a href="{{ route('docs') }}" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{{ __('Docs') }}</a>
                 </div>
                 <div class="hidden md:flex items-center gap-3">
                     <x-language-switcher />
@@ -40,6 +41,38 @@
                         <a href="{{ route('login') }}" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{{ __('Sign In') }}</a>
                         <a href="{{ route('register') }}" class="px-4 py-2 btn-gradient text-sm font-semibold rounded-xl transition-all">{{ __('Get Started Free') }}</a>
                     @endauth
+                </div>
+
+                {{-- Mobile menu button --}}
+                <button @click="mobileMenu = !mobileMenu" class="md:hidden p-2 rounded-lg text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+            </div>
+
+            {{-- Mobile Nav --}}
+            <div x-show="mobileMenu" x-transition class="md:hidden py-4 border-t border-gray-200 dark:border-gray-800">
+                <div class="space-y-2">
+                    <a href="{{ route('home') }}#features" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">{{ __('Features') }}</a>
+                    <a href="{{ route('home') }}#pricing" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">{{ __('Pricing') }}</a>
+                    <a href="{{ route('extension') }}" class="block px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">{{ __('Extension') }}</a>
+                    <a href="{{ route('docs') }}" class="block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-800">{{ __('Docs') }}</a>
+                    <div class="flex items-center gap-3 px-3 py-2">
+                        <x-language-switcher />
+                        <button @click="$store.darkMode.toggle()" class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-surface-800 transition-colors">
+                            <svg x-show="!$store.darkMode.on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                            <svg x-show="$store.darkMode.on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        </button>
+                    </div>
+                    @guest
+                    <div class="flex gap-3 pt-2">
+                        <a href="{{ route('login') }}" class="flex-1 text-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300">{{ __('Sign In') }}</a>
+                        <a href="{{ route('register') }}" class="flex-1 text-center px-4 py-2 btn-gradient text-sm font-semibold rounded-xl">{{ __('Get Started Free') }}</a>
+                    </div>
+                    @else
+                    <div class="pt-2">
+                        <a href="{{ route('dashboard') }}" class="block text-center px-4 py-2 btn-gradient text-sm font-semibold rounded-xl">{{ __('Dashboard') }}</a>
+                    </div>
+                    @endguest
                 </div>
             </div>
         </div>
