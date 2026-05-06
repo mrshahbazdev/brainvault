@@ -23,7 +23,7 @@
             </div>
 
             {{-- Filter Tabs --}}
-            <div class="flex items-center gap-1 bg-gray-100 dark:bg-surface-800 rounded-xl p-1">
+            <div class="flex flex-wrap items-center gap-1 bg-gray-100 dark:bg-surface-800 rounded-xl p-1">
                 @foreach(['all' => __('All'), 'favorites' => __('Favorites'), 'unread' => __('Unread'), 'archived' => __('Archived')] as $key => $label)
                     <button wire:click="$set('filter', '{{ $key }}')"
                             class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors {{ $filter === $key ? 'bg-white dark:bg-surface-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300' }}">

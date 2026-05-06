@@ -34,7 +34,7 @@
     <div class="bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ __('Create API Token') }}</h2>
         <p class="text-sm text-gray-500 mb-4">{{ __('API tokens allow the Chrome extension and third-party apps to access BrainVault on your behalf.') }}</p>
-        <form action="{{ route('settings.tokens.create') }}" method="POST" class="flex items-end gap-3">
+        <form action="{{ route('settings.tokens.create') }}" method="POST" class="flex flex-col sm:flex-row sm:items-end gap-3">
             @csrf
             <div class="flex-1">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Token Name') }}</label>

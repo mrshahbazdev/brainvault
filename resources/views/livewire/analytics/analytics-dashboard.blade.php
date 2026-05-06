@@ -1,5 +1,5 @@
 <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Analytics') }}</h1>
         <select wire:model.live="period" class="px-3 py-2 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary-500">
             <option value="7">{{ __('Last 7 days') }}</option>
@@ -46,7 +46,7 @@
         {{-- Reading Stats --}}
         <div class="bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('Reading Stats') }}</h2>
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($readingStats['total_words']) }}</p>
                     <p class="text-xs text-gray-500">{{ __('Total words saved') }}</p>

@@ -178,7 +178,7 @@
         <div class="flex-1 lg:ml-64" :class="{ 'lg:ml-64': sidebarOpen, 'lg:ml-20': !sidebarOpen }">
             {{-- Top Bar --}}
             <header class="sticky top-0 z-20 bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800">
-                <div class="flex items-center justify-between px-6 py-3">
+                <div class="flex items-center justify-between px-4 sm:px-6 py-3">
                     <div class="flex items-center gap-4">
                         <button @click="mobileSidebar = !mobileSidebar" class="lg:hidden text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -193,7 +193,7 @@
                                    class="w-64 lg:w-80 pl-10 pr-4 py-2 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500">
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 sm:gap-3">
                         {{-- Dark Mode Toggle --}}
                         <button @click="$store.darkMode.toggle()" class="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-surface-800 transition-colors">
                             <svg x-show="!$store.darkMode.on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
@@ -215,7 +215,7 @@
             </header>
 
             {{-- Page Content --}}
-            <main class="p-6">
+            <main class="p-4 sm:p-6">
                 @hasSection('content')
                     @yield('content')
                 @elseif(isset($slot))
