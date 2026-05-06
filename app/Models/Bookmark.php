@@ -31,6 +31,10 @@ class Bookmark extends Model
         'is_archived',
         'is_favorite',
         'is_read',
+        'is_trashed',
+        'trashed_at',
+        'is_read_later',
+        'read_later_reminder_at',
         'read_at',
         'read_progress',
         'metadata',
@@ -38,6 +42,11 @@ class Bookmark extends Model
         'ai_keywords',
         'ai_category',
         'scraped_at',
+        'link_status',
+        'link_checked_at',
+        'snapshot_path',
+        'snapshot_at',
+        'share_token',
     ];
 
     protected function casts(): array
@@ -46,12 +55,38 @@ class Bookmark extends Model
             'is_archived' => 'boolean',
             'is_favorite' => 'boolean',
             'is_read' => 'boolean',
+            'is_trashed' => 'boolean',
+            'is_read_later' => 'boolean',
+            'trashed_at' => 'datetime',
+            'read_later_reminder_at' => 'datetime',
             'read_at' => 'datetime',
             'read_progress' => 'decimal:2',
             'metadata' => 'array',
             'ai_keywords' => 'array',
             'scraped_at' => 'datetime',
+            'link_checked_at' => 'datetime',
+            'snapshot_at' => 'datetime',
         ];
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_trashed', false);
+    }
+
+    public function scopeTrashed($query)
+    {
+        return $query->where('is_trashed', true);
+    }
+
+    public function scopeReadLater($query)
+    {
+        return $query->where('is_read_later', true)->where('is_trashed', false);
+    }
+
+    public function scopeBrokenLinks($query)
+    {
+        return $query->where('link_status', 'dead')->where('is_trashed', false);
     }
 
     public function user(): BelongsTo

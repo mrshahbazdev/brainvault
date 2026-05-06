@@ -4,8 +4,10 @@ namespace App\Jobs;
 
 use App\Events\BookmarkProcessed;
 use App\Models\Bookmark;
+use App\Models\Tag;
 use App\Services\AIService;
 use App\Services\MetadataScraperService;
+use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -93,6 +95,27 @@ class ProcessBookmarkAI implements ShouldQueue
         }
 
         $bookmark->save();
+
+        // Smart Tagging — auto-attach tags from AI keywords
+        if (!empty($bookmark->ai_keywords) && $bookmark->tags()->count() === 0) {
+            $userId = $bookmark->user_id;
+            $tagIds = [];
+            foreach (array_slice($bookmark->ai_keywords, 0, 5) as $keyword) {
+                $slug = Str::slug($keyword);
+                if (empty($slug)) {
+                    continue;
+                }
+                $tag = Tag::firstOrCreate(
+                    ['user_id' => $userId, 'slug' => $slug],
+                    ['name' => $keyword, 'color' => null]
+                );
+                $tag->increment('usage_count');
+                $tagIds[] = $tag->id;
+            }
+            if (!empty($tagIds)) {
+                $bookmark->tags()->syncWithoutDetaching($tagIds);
+            }
+        }
 
         // Broadcast real-time notification
         BookmarkProcessed::dispatch($bookmark);
