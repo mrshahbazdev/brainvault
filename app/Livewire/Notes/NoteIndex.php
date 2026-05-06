@@ -23,6 +23,13 @@ class NoteIndex extends Component
     public string $newColor = '';
     public string $noteType = 'note';
 
+    public function mount(): void
+    {
+        if (request()->boolean('create')) {
+            $this->showCreateModal = true;
+        }
+    }
+
     public function updatedSearch(): void
     {
         $this->resetPage();
