@@ -62,8 +62,7 @@ class Bookmark extends Model
     public function collections(): BelongsToMany
     {
         return $this->belongsToMany(Collection::class)
-            ->withPivot('sort_order', 'added_at')
-            ->withTimestamps();
+            ->withPivot('sort_order', 'added_at');
     }
 
     public function notes(): HasMany

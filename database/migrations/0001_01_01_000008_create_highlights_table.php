@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('highlights', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('bookmark_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('bookmark_id')->nullable()->constrained()->nullOnDelete();
             $table->text('text');
             $table->text('note')->nullable();
             $table->string('color', 7)->default('#FBBF24');

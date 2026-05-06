@@ -25,7 +25,7 @@ class HighlightController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'bookmark_id' => ['required', 'exists:bookmarks,id'],
+            'bookmark_id' => ['nullable', 'exists:bookmarks,id'],
             'text' => ['required', 'string'],
             'note' => ['nullable', 'string'],
             'color' => ['nullable', 'string', 'max:7'],
@@ -36,6 +36,14 @@ class HighlightController extends Controller
             'end_offset' => ['required', 'integer'],
             'surrounding_text' => ['nullable', 'string'],
         ]);
+
+        // Auto-link to existing bookmark for this URL if no bookmark_id provided
+        if (empty($validated['bookmark_id']) && !empty($validated['page_url'])) {
+            $bookmark = Auth::user()->bookmarks()->where('url', $validated['page_url'])->first();
+            if ($bookmark) {
+                $validated['bookmark_id'] = $bookmark->id;
+            }
+        }
 
         $highlight = Auth::user()->highlights()->create($validated);
 
