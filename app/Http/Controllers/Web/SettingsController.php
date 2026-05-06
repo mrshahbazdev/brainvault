@@ -49,7 +49,7 @@ class SettingsController extends Controller
     {
         return view('settings.api-tokens', [
             'user' => Auth::user(),
-            'tokens' => Auth::user()->tokens,
+            'tokens' => Auth::user()->tokens()->latest()->paginate(10),
         ]);
     }
 

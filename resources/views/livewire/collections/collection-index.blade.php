@@ -69,6 +69,13 @@
         @endforelse
     </div>
 
+    {{-- Pagination --}}
+    @if($collections->hasPages())
+        <div class="mt-6">
+            {{ $collections->links() }}
+        </div>
+    @endif
+
     {{-- Create/Edit Modal --}}
     @if($showCreateModal || $showEditModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">

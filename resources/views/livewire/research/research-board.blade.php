@@ -77,6 +77,13 @@
         </div>
     @endforelse
 
+    {{-- Pagination --}}
+    @if($projects->hasPages())
+        <div class="mt-6">
+            {{ $projects->links() }}
+        </div>
+    @endif
+
     {{-- Create Project Modal --}}
     @if($showProjectModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="$set('showProjectModal', false)">

@@ -6,9 +6,11 @@ use App\Models\Team;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class TeamIndex extends Component
 {
+    use WithPagination;
     public bool $showCreateModal = false;
     public bool $showInviteModal = false;
     public string $newName = '';
@@ -86,7 +88,7 @@ class TeamIndex extends Component
 
     public function render()
     {
-        $ownedTeams = Auth::user()->ownedTeams()->with('members')->get();
+        $ownedTeams = Auth::user()->ownedTeams()->with('members')->paginate(12, ['*'], 'ownedPage');
         $memberTeams = Auth::user()->teams ?? collect();
 
         return view('livewire.teams.team-index', [
