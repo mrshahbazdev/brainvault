@@ -153,7 +153,13 @@ function getXPath(node) {
   if (!node) return '';
 
   if (node.nodeType === Node.TEXT_NODE) {
-    return getXPath(node.parentNode) + '/text()';
+    let textIndex = 1;
+    let sib = node.previousSibling;
+    while (sib) {
+      if (sib.nodeType === Node.TEXT_NODE) textIndex++;
+      sib = sib.previousSibling;
+    }
+    return getXPath(node.parentNode) + '/text()[' + textIndex + ']';
   }
 
   const parts = [];
@@ -218,9 +224,12 @@ async function renderSavedHighlights() {
 
     for (const highlight of response.highlights.data) {
       try {
-        restoreHighlight(highlight);
+        if (!restoreHighlightByXPath(highlight)) {
+          restoreHighlightByText(highlight);
+        }
       } catch (e) {
-        // Silently skip highlights that can't be restored
+        // Last resort: try text-based search
+        try { restoreHighlightByText(highlight); } catch (e2) {}
       }
     }
   } catch (e) {
@@ -228,43 +237,107 @@ async function renderSavedHighlights() {
   }
 }
 
-function restoreHighlight(highlight) {
-  // Try to find the start text node using XPath
-  const startResult = document.evaluate(
-    highlight.start_xpath,
-    document,
-    null,
-    XPathResult.FIRST_ORDERED_NODE_TYPE,
-    null
-  );
+function restoreHighlightByXPath(highlight) {
+  if (!highlight.start_xpath) return false;
 
-  const startNode = startResult.singleNodeValue;
-  if (!startNode) return;
-
-  const startTextNode = startNode.nodeType === Node.TEXT_NODE ? startNode : startNode.firstChild;
-  if (!startTextNode) return;
-
-  // Find end node (may be same or different)
-  let endTextNode = startTextNode;
-  if (highlight.end_xpath && highlight.end_xpath !== highlight.start_xpath) {
-    const endResult = document.evaluate(
-      highlight.end_xpath,
+  try {
+    const startResult = document.evaluate(
+      highlight.start_xpath,
       document,
       null,
       XPathResult.FIRST_ORDERED_NODE_TYPE,
       null
     );
-    const endNode = endResult.singleNodeValue;
-    if (endNode) {
-      endTextNode = endNode.nodeType === Node.TEXT_NODE ? endNode : endNode.firstChild;
+
+    const startNode = startResult.singleNodeValue;
+    if (!startNode) return false;
+
+    const startTextNode = startNode.nodeType === Node.TEXT_NODE ? startNode : startNode.firstChild;
+    if (!startTextNode || startTextNode.nodeType !== Node.TEXT_NODE) return false;
+
+    let endTextNode = startTextNode;
+    if (highlight.end_xpath && highlight.end_xpath !== highlight.start_xpath) {
+      const endResult = document.evaluate(
+        highlight.end_xpath,
+        document,
+        null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE,
+        null
+      );
+      const endNode = endResult.singleNodeValue;
+      if (endNode) {
+        endTextNode = endNode.nodeType === Node.TEXT_NODE ? endNode : endNode.firstChild;
+      }
     }
+    if (!endTextNode) endTextNode = startTextNode;
+
+    const startOffset = Math.min(highlight.start_offset, startTextNode.length);
+    const endOffset = Math.min(highlight.end_offset, endTextNode.length);
+    if (startOffset >= startTextNode.length) return false;
+
+    const range = document.createRange();
+    range.setStart(startTextNode, startOffset);
+    range.setEnd(endTextNode, endOffset);
+
+    const rangeText = range.toString().trim();
+    const highlightText = (highlight.text || '').trim();
+    if (highlightText && rangeText && !rangeText.includes(highlightText.substring(0, 20)) && !highlightText.includes(rangeText.substring(0, 20))) {
+      return false;
+    }
+
+    return applyHighlightMark(range, highlight);
+  } catch (e) {
+    return false;
   }
-  if (!endTextNode) endTextNode = startTextNode;
+}
 
-  const range = document.createRange();
-  range.setStart(startTextNode, Math.min(highlight.start_offset, startTextNode.length));
-  range.setEnd(endTextNode, Math.min(highlight.end_offset, endTextNode.length));
+function restoreHighlightByText(highlight) {
+  if (!highlight.text) return false;
 
+  const searchText = highlight.text.trim();
+  if (searchText.length < 3) return false;
+
+  const treeWalker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT,
+    null
+  );
+
+  let node;
+  while ((node = treeWalker.nextNode())) {
+    const nodeText = node.textContent;
+    const index = nodeText.indexOf(searchText);
+    if (index === -1) continue;
+
+    // Skip if already highlighted
+    if (node.parentElement?.closest('.brainvault-highlight')) continue;
+
+    const range = document.createRange();
+    range.setStart(node, index);
+    range.setEnd(node, index + searchText.length);
+
+    return applyHighlightMark(range, highlight);
+  }
+
+  // Multi-node text search: the highlighted text may span across elements
+  const bodyText = document.body.innerText;
+  const idx = bodyText.indexOf(searchText);
+  if (idx === -1) return false;
+
+  // Use window.find as a last resort (highlights first visible match)
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  if (window.find(searchText, false, false, false, false, false, false)) {
+    const foundRange = sel.getRangeAt(0);
+    sel.removeAllRanges();
+    if (foundRange.startContainer.parentElement?.closest('.brainvault-highlight')) return false;
+    return applyHighlightMark(foundRange, highlight);
+  }
+
+  return false;
+}
+
+function applyHighlightMark(range, highlight) {
   const mark = document.createElement('mark');
   mark.className = 'brainvault-highlight';
   mark.dataset.color = HIGHLIGHT_COLORS.find(c => c.value === highlight.color)?.name || 'yellow';
@@ -272,14 +345,15 @@ function restoreHighlight(highlight) {
 
   try {
     range.surroundContents(mark);
+    return true;
   } catch (e) {
-    // Can't wrap complex selections - try alternative approach
     try {
       const fragment = range.extractContents();
       mark.appendChild(fragment);
       range.insertNode(mark);
+      return true;
     } catch (e2) {
-      // Silently fail if we can't restore this highlight
+      return false;
     }
   }
 }
