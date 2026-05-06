@@ -137,7 +137,7 @@ async function saveHighlight(text, color) {
   const data = {
     text,
     color: HIGHLIGHT_COLORS.find(c => c.name === color)?.value || '#FBBF24',
-    page_url: window.location.href,
+    page_url: normalizeUrl(window.location.href),
     start_xpath: getXPath(selectedRange.startContainer),
     start_offset: selectedRange.startOffset,
     end_xpath: getXPath(selectedRange.endContainer),
@@ -248,29 +248,64 @@ function showErrorNotification(msg) {
   setTimeout(() => notification.remove(), 5000);
 }
 
+function normalizeUrl(url) {
+  try {
+    const u = new URL(url);
+    u.hash = '';
+    return u.toString().replace(/\/+$/, '');
+  } catch (e) {
+    return url.split('#')[0].replace(/\/+$/, '');
+  }
+}
+
 // Render saved highlights on page load
 async function renderSavedHighlights() {
+  const highlights = await fetchHighlightsForCurrentPage();
+  if (!highlights || highlights.length === 0) return;
+
+  let restored = restoreHighlights(highlights);
+
+  // Retry after a delay for dynamically loaded content
+  if (restored < highlights.length) {
+    setTimeout(() => {
+      restoreHighlights(highlights);
+    }, 1500);
+  }
+}
+
+async function fetchHighlightsForCurrentPage() {
   try {
     const response = await chrome.runtime.sendMessage({
       type: 'GET_HIGHLIGHTS_FOR_URL',
-      url: window.location.href,
+      url: normalizeUrl(window.location.href),
     });
 
-    if (!response?.success || !response.highlights?.data) return;
-
-    for (const highlight of response.highlights.data) {
-      try {
-        if (!restoreHighlightByXPath(highlight)) {
-          restoreHighlightByText(highlight);
-        }
-      } catch (e) {
-        // Last resort: try text-based search
-        try { restoreHighlightByText(highlight); } catch (e2) {}
-      }
-    }
+    if (!response?.success || !response.highlights?.data) return [];
+    return response.highlights.data;
   } catch (e) {
-    // Extension context may not be available
+    return [];
   }
+}
+
+function restoreHighlights(highlights) {
+  let restored = 0;
+  for (const highlight of highlights) {
+    // Skip if already restored
+    if (document.querySelector(`[data-highlight-id="${highlight.id}"]`)) {
+      restored++;
+      continue;
+    }
+    try {
+      if (restoreHighlightByXPath(highlight) || restoreHighlightByText(highlight)) {
+        restored++;
+      }
+    } catch (e) {
+      try {
+        if (restoreHighlightByText(highlight)) restored++;
+      } catch (e2) {}
+    }
+  }
+  return restored;
 }
 
 function restoreHighlightByXPath(highlight) {

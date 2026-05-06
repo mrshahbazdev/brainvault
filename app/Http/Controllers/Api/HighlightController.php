@@ -14,7 +14,16 @@ class HighlightController extends Controller
     {
         $highlights = Auth::user()->highlights()
             ->when($request->bookmark_id, fn ($q, $id) => $q->where('bookmark_id', $id))
-            ->when($request->page_url, fn ($q, $url) => $q->where('page_url', $url))
+            ->when($request->page_url, function ($q) use ($request) {
+                $url = strtok($request->page_url, '#');
+                $url = rtrim($url, '/');
+                $q->where(function ($q2) use ($url) {
+                    $q2->where('page_url', $url)
+                       ->orWhere('page_url', $url . '/')
+                       ->orWhere('page_url', 'LIKE', $url . '#%')
+                       ->orWhere('page_url', 'LIKE', $url . '/#%');
+                });
+            })
             ->with(['bookmark', 'tags'])
             ->latest()
             ->paginate($request->per_page ?? 20);
