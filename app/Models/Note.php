@@ -16,6 +16,7 @@ class Note extends Model
     protected $fillable = [
         'user_id',
         'bookmark_id',
+        'task_id',
         'parent_id',
         'title',
         'content',
@@ -54,6 +55,11 @@ class Note extends Model
     public function bookmark(): BelongsTo
     {
         return $this->belongsTo(Bookmark::class);
+    }
+
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
     }
 
     public function parent(): BelongsTo

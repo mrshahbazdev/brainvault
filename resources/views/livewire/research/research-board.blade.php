@@ -48,10 +48,62 @@
                                     @if($task->description)
                                         <p class="text-xs text-gray-500 mt-1">{{ Str::limit($task->description, 100) }}</p>
                                     @endif
+
+                                    {{-- Highlights attached to this task --}}
+                                    @if($task->highlights->count())
+                                        <div class="mt-2 space-y-1">
+                                            @foreach($task->highlights as $highlight)
+                                                <div class="flex items-start gap-1.5 px-2 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200/60 dark:border-yellow-800/40">
+                                                    <span class="mt-0.5 w-2 h-2 rounded-full shrink-0" style="background-color: {{ $highlight->color }}"></span>
+                                                    <p class="text-[11px] text-gray-700 dark:text-gray-300 leading-snug flex-1">{{ Str::limit($highlight->text, 80) }}</p>
+                                                    <button wire:click="removeHighlight({{ $highlight->id }})" class="p-0.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    {{-- Notes attached to this task --}}
+                                    @if($task->notes->count())
+                                        <div class="mt-2 space-y-1">
+                                            @foreach($task->notes as $note)
+                                                <div class="flex items-start gap-1.5 px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-800/40">
+                                                    <svg class="w-3 h-3 mt-0.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-[11px] font-medium text-gray-700 dark:text-gray-300 truncate">{{ $note->title }}</p>
+                                                        @if($note->content_plain)
+                                                            <p class="text-[10px] text-gray-500 truncate">{{ Str::limit($note->content_plain, 60) }}</p>
+                                                        @endif
+                                                    </div>
+                                                    <button wire:click="removeNote({{ $note->id }})" class="p-0.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
                                     <div class="flex items-center gap-2 mt-2">
                                         <span class="px-1.5 py-0.5 text-[10px] font-medium rounded {{ $task->priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : ($task->priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-gray-100 text-gray-500 dark:bg-surface-800 dark:text-gray-500') }}">
                                             {{ ucfirst($task->priority ?? 'normal') }}
                                         </span>
+
+                                        {{-- Add highlight/note buttons --}}
+                                        <div class="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button wire:click="openHighlightModal({{ $task->id }})" class="flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded transition-colors" title="{{ __('Add Highlight') }}">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                @if($task->highlights->count())
+                                                    <span>{{ $task->highlights->count() }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="openNoteModal({{ $task->id }})" class="flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors" title="{{ __('Add Note') }}">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                @if($task->notes->count())
+                                                    <span>{{ $task->notes->count() }}</span>
+                                                @endif
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -125,6 +177,70 @@
                 <div class="flex items-center justify-end gap-3 mt-6">
                     <button wire:click="$set('showTaskModal', false)" class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-800 rounded-xl transition-colors">{{ __('Cancel') }}</button>
                     <button wire:click="createTask" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl transition-colors">{{ __('Add Task') }}</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Add Highlight to Task Modal --}}
+    @if($showHighlightModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="$set('showHighlightModal', false)">
+            <div class="bg-white dark:bg-surface-900 rounded-2xl shadow-xl w-full max-w-md p-6 mx-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <span class="inline-flex items-center gap-2">
+                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        {{ __('Add Highlight') }}
+                    </span>
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Highlighted Text') }}</label>
+                        <textarea wire:model="newHighlightText" rows="3" placeholder="{{ __('Paste or type the highlighted text...') }}" class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Color') }}</label>
+                        <div class="flex items-center gap-2">
+                            @foreach(['#FBBF24', '#F87171', '#34D399', '#60A5FA', '#A78BFA', '#FB923C'] as $color)
+                                <button wire:click="$set('newHighlightColor', '{{ $color }}')" class="w-7 h-7 rounded-full border-2 transition-all {{ $newHighlightColor === $color ? 'border-gray-900 dark:border-white scale-110' : 'border-transparent hover:scale-105' }}" style="background-color: {{ $color }}"></button>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Note') }} <span class="text-gray-400 font-normal">({{ __('optional') }})</span></label>
+                        <textarea wire:model="newHighlightNote" rows="2" placeholder="{{ __('Add a note about this highlight...') }}" class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 resize-none"></textarea>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 mt-6">
+                    <button wire:click="$set('showHighlightModal', false)" class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-800 rounded-xl transition-colors">{{ __('Cancel') }}</button>
+                    <button wire:click="createHighlight" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-xl transition-colors">{{ __('Add Highlight') }}</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Add Note to Task Modal --}}
+    @if($showNoteModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="$set('showNoteModal', false)">
+            <div class="bg-white dark:bg-surface-900 rounded-2xl shadow-xl w-full max-w-md p-6 mx-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <span class="inline-flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        {{ __('Add Note') }}
+                    </span>
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Title') }}</label>
+                        <input wire:model="newNoteTitle" type="text" placeholder="{{ __('Note title...') }}" class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Content') }}</label>
+                        <textarea wire:model="newNoteContent" rows="4" placeholder="{{ __('Write your note...') }}" class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 resize-none"></textarea>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 mt-6">
+                    <button wire:click="$set('showNoteModal', false)" class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-800 rounded-xl transition-colors">{{ __('Cancel') }}</button>
+                    <button wire:click="createNote" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors">{{ __('Add Note') }}</button>
                 </div>
             </div>
         </div>
