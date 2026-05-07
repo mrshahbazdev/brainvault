@@ -1,4 +1,10 @@
-<div>
+<div x-data @copy-to-clipboard.window="
+    navigator.clipboard.writeText($event.detail.url).then(() => {
+        $dispatch('notify', { message: 'Share link copied to clipboard!' });
+    }).catch(() => {
+        prompt('Copy this share link:', $event.detail.url);
+    })
+">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>

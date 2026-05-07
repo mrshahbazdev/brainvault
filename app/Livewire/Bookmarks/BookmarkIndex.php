@@ -180,8 +180,10 @@ class BookmarkIndex extends Component
         $bookmark = Auth::user()->bookmarks()->findOrFail($id);
         if (!$bookmark->share_token) {
             $bookmark->update(['share_token' => Str::random(64)]);
+            $bookmark->refresh();
         }
-        $this->dispatch('notify', message: 'Share link generated!');
+        $shareUrl = url('/share/bookmark/' . $bookmark->share_token);
+        $this->dispatch('copy-to-clipboard', url: $shareUrl);
     }
 
     public function toggleSelectAll(): void

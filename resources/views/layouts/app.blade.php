@@ -338,5 +338,37 @@
             <button onclick="document.getElementById('keyboard-shortcuts-modal').classList.add('hidden')" class="mt-4 w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-surface-800 rounded-xl hover:bg-gray-200 dark:hover:bg-surface-700 transition-colors">Close</button>
         </div>
     </div>
+    {{-- Toast Notifications --}}
+    <div x-data="toastNotifications()" @notify.window="add($event.detail.message)" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-show="toast.visible"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-1 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-1 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-2"
+                 class="flex items-center gap-2 px-4 py-3 bg-white dark:bg-surface-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-200 max-w-sm">
+                <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                <span x-text="toast.message"></span>
+            </div>
+        </template>
+    </div>
+    <script>
+        function toastNotifications() {
+            return {
+                toasts: [],
+                add(message) {
+                    const id = Date.now();
+                    this.toasts.push({ id, message, visible: true });
+                    setTimeout(() => {
+                        const t = this.toasts.find(t => t.id === id);
+                        if (t) t.visible = false;
+                        setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 300);
+                    }, 3000);
+                }
+            };
+        }
+    </script>
 </body>
 </html>
