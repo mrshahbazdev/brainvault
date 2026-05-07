@@ -96,8 +96,9 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @forelse($bookmarks as $bookmark)
                 <div class="group bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative"
+                     :class="{ 'z-30': menuOpen }"
                      wire:key="bookmark-{{ $bookmark->id }}"
-                     x-data="{ showPreview: false }"
+                     x-data="{ showPreview: false, menuOpen: false }"
                      @mouseenter="showPreview = true" @mouseleave="showPreview = false">
                     {{-- Image --}}
                     <div class="relative aspect-video bg-gray-100 dark:bg-surface-800 rounded-t-2xl overflow-hidden">
@@ -154,32 +155,32 @@
                                 @if($bookmark->reading_time)
                                     <span class="text-xs text-gray-400">{{ $bookmark->reading_time }} {{ __('min') }}</span>
                                 @endif
-                                <div class="relative" x-data="{ open: false }">
-                                    <button @click="open = !open" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <div class="relative">
+                                    <button @click="menuOpen = !menuOpen" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
                                     </button>
-                                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 w-40 bg-white dark:bg-surface-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
-                                        <button wire:click="toggleReadLater({{ $bookmark->id }})" @click="open = false" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-700">
+                                    <div x-show="menuOpen" @click.away="menuOpen = false" class="absolute right-0 mt-1 w-40 bg-white dark:bg-surface-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
+                                        <button wire:click="toggleReadLater({{ $bookmark->id }})" @click="menuOpen = false" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-700">
                                             {{ $bookmark->is_read_later ? __('Remove from Read Later') : __('Read Later') }}
                                         </button>
-                                        <button wire:click="toggleArchive({{ $bookmark->id }})" @click="open = false" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-700">
+                                        <button wire:click="toggleArchive({{ $bookmark->id }})" @click="menuOpen = false" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-700">
                                             {{ $bookmark->is_archived ? __('Unarchive') : __('Archive') }}
                                         </button>
-                                        <button wire:click="captureSnapshot({{ $bookmark->id }})" @click="open = false" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-700">
+                                        <button wire:click="captureSnapshot({{ $bookmark->id }})" @click="menuOpen = false" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-700">
                                             {{ __('Save Snapshot') }}
                                         </button>
-                                        <button wire:click="generateShareLink({{ $bookmark->id }})" @click="open = false" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-700">
+                                        <button wire:click="generateShareLink({{ $bookmark->id }})" @click="menuOpen = false" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-700">
                                             {{ __('Share Link') }}
                                         </button>
                                         @if($filter === 'trash')
-                                            <button wire:click="restoreBookmark({{ $bookmark->id }})" @click="open = false" class="w-full text-left px-3 py-1.5 text-xs text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20">
+                                            <button wire:click="restoreBookmark({{ $bookmark->id }})" @click="menuOpen = false" class="w-full text-left px-3 py-1.5 text-xs text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20">
                                                 {{ __('Restore') }}
                                             </button>
-                                            <button wire:click="permanentDelete({{ $bookmark->id }})" wire:confirm="{{ __('Permanently delete?') }}" @click="open = false" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                            <button wire:click="permanentDelete({{ $bookmark->id }})" wire:confirm="{{ __('Permanently delete?') }}" @click="menuOpen = false" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                                                 {{ __('Delete Forever') }}
                                             </button>
                                         @else
-                                            <button wire:click="trashBookmark({{ $bookmark->id }})" @click="open = false" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                            <button wire:click="trashBookmark({{ $bookmark->id }})" @click="menuOpen = false" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                                                 {{ __('Move to Trash') }}
                                             </button>
                                         @endif
