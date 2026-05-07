@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Research;
 
+use App\Models\Bookmark;
 use App\Models\ResearchProject;
 use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -28,6 +30,16 @@ class ResearchBoard extends Component
     public string $newHighlightNote = '';
     public string $newNoteTitle = '';
     public string $newNoteContent = '';
+
+    // Bulk selection
+    public array $selectedTasks = [];
+    public bool $showBulkTagModal = false;
+    public bool $showBulkMoveModal = false;
+    public bool $showBulkAddToTaskModal = false;
+    public string $bulkTagName = '';
+    public ?int $bulkMoveCollectionId = null;
+    public ?int $bulkTaskProjectId = null;
+    public string $bulkTaskStatus = 'todo';
 
     public function openProjectModal(): void
     {
@@ -176,15 +188,148 @@ class ResearchBoard extends Component
         ]);
     }
 
+    // Bulk actions on bookmarks linked to selected tasks
+    protected function getSelectedBookmarks()
+    {
+        $bookmarkIds = Auth::user()->tasks()
+            ->whereIn('id', $this->selectedTasks)
+            ->whereNotNull('bookmark_id')
+            ->pluck('bookmark_id');
+
+        return Auth::user()->bookmarks()->whereIn('id', $bookmarkIds)->get();
+    }
+
+    public function bulkFavorite(): void
+    {
+        $bookmarks = $this->getSelectedBookmarks();
+        Auth::user()->bookmarks()->whereIn('id', $bookmarks->pluck('id'))->update(['is_favorite' => true]);
+        $this->selectedTasks = [];
+        $this->dispatch('notify', message: $bookmarks->count() . ' bookmark(s) marked as favorite.');
+    }
+
+    public function bulkArchive(): void
+    {
+        $bookmarks = $this->getSelectedBookmarks();
+        Auth::user()->bookmarks()->whereIn('id', $bookmarks->pluck('id'))->update(['is_archived' => true]);
+        $this->selectedTasks = [];
+        $this->dispatch('notify', message: $bookmarks->count() . ' bookmark(s) archived.');
+    }
+
+    public function bulkReadLater(): void
+    {
+        $bookmarks = $this->getSelectedBookmarks();
+        Auth::user()->bookmarks()->whereIn('id', $bookmarks->pluck('id'))->update(['is_read_later' => true]);
+        $this->selectedTasks = [];
+        $this->dispatch('notify', message: $bookmarks->count() . ' bookmark(s) added to read later.');
+    }
+
+    public function openBulkTagModal(): void
+    {
+        $this->bulkTagName = '';
+        $this->showBulkTagModal = true;
+    }
+
+    public function applyBulkTag(): void
+    {
+        if (empty($this->bulkTagName)) {
+            return;
+        }
+
+        $tag = Auth::user()->tags()->firstOrCreate(
+            ['slug' => Str::slug($this->bulkTagName)],
+            ['name' => $this->bulkTagName]
+        );
+
+        $bookmarks = $this->getSelectedBookmarks();
+        foreach ($bookmarks as $bookmark) {
+            $bookmark->tags()->syncWithoutDetaching([$tag->id]);
+        }
+
+        $this->showBulkTagModal = false;
+        $this->selectedTasks = [];
+        $this->dispatch('notify', message: 'Tag applied to ' . $bookmarks->count() . ' bookmark(s).');
+    }
+
+    public function openBulkMoveModal(): void
+    {
+        $this->bulkMoveCollectionId = null;
+        $this->showBulkMoveModal = true;
+    }
+
+    public function applyBulkMove(): void
+    {
+        if (!$this->bulkMoveCollectionId) {
+            return;
+        }
+
+        $bookmarks = $this->getSelectedBookmarks();
+        foreach ($bookmarks as $bookmark) {
+            $bookmark->collections()->syncWithoutDetaching([$this->bulkMoveCollectionId]);
+        }
+
+        $this->showBulkMoveModal = false;
+        $this->selectedTasks = [];
+        $this->dispatch('notify', message: $bookmarks->count() . ' bookmark(s) moved to collection.');
+    }
+
+    public function openBulkAddToTaskModal(): void
+    {
+        $this->bulkTaskProjectId = null;
+        $this->bulkTaskStatus = 'todo';
+        $this->showBulkAddToTaskModal = true;
+    }
+
+    public function applyBulkAddToTask(): void
+    {
+        if (!$this->bulkTaskProjectId) {
+            return;
+        }
+
+        $project = Auth::user()->researchProjects()->find($this->bulkTaskProjectId);
+        if (!$project) {
+            return;
+        }
+
+        $bookmarks = $this->getSelectedBookmarks();
+        foreach ($bookmarks as $bookmark) {
+            Task::create([
+                'user_id' => Auth::id(),
+                'research_project_id' => $project->id,
+                'bookmark_id' => $bookmark->id,
+                'title' => $bookmark->title ?? 'Untitled Bookmark',
+                'description' => $bookmark->description,
+                'status' => $this->bulkTaskStatus,
+                'priority' => 'medium',
+            ]);
+        }
+
+        $this->showBulkAddToTaskModal = false;
+        $this->selectedTasks = [];
+        $this->dispatch('notify', message: $bookmarks->count() . ' bookmark(s) added as tasks.');
+    }
+
+    public function bulkTrash(): void
+    {
+        $bookmarks = $this->getSelectedBookmarks();
+        Auth::user()->bookmarks()->whereIn('id', $bookmarks->pluck('id'))->update([
+            'is_trashed' => true,
+            'trashed_at' => now(),
+        ]);
+        $this->selectedTasks = [];
+        $this->dispatch('notify', message: $bookmarks->count() . ' bookmark(s) moved to trash.');
+    }
+
     public function render()
     {
         $projects = Auth::user()->researchProjects()
-            ->with(['tasks' => fn ($q) => $q->with(['highlights', 'notes' => fn ($n) => $n->where('is_trashed', false)])->orderBy('priority')])
+            ->with(['tasks' => fn ($q) => $q->with(['highlights', 'notes' => fn ($n) => $n->where('is_trashed', false), 'bookmark'])->orderBy('priority')])
             ->orderByDesc('created_at')
             ->paginate(6);
 
         return view('livewire.research.research-board', [
             'projects' => $projects,
+            'collections' => Auth::user()->collections()->orderBy('name')->get(),
+            'researchProjects' => Auth::user()->researchProjects()->orderBy('name')->get(),
         ])->layout('layouts.app', ['title' => 'Research']);
     }
 }
