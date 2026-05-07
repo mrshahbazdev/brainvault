@@ -14,6 +14,7 @@ class HighlightController extends Controller
     {
         $highlights = Auth::user()->highlights()
             ->when($request->bookmark_id, fn ($q, $id) => $q->where('bookmark_id', $id))
+            ->when($request->task_id, fn ($q, $id) => $q->where('task_id', $id))
             ->when($request->page_url, function ($q) use ($request) {
                 $url = strtok($request->page_url, '#');
                 $url = rtrim($url, '/');
@@ -24,7 +25,7 @@ class HighlightController extends Controller
                        ->orWhere('page_url', 'LIKE', $url . '/#%');
                 });
             })
-            ->with(['bookmark', 'tags'])
+            ->with(['bookmark', 'task', 'tags'])
             ->latest()
             ->paginate($request->per_page ?? 20);
 
@@ -35,6 +36,7 @@ class HighlightController extends Controller
     {
         $validated = $request->validate([
             'bookmark_id' => ['nullable', 'exists:bookmarks,id'],
+            'task_id' => ['nullable', 'exists:tasks,id'],
             'text' => ['required', 'string'],
             'note' => ['nullable', 'string'],
             'color' => ['nullable', 'string', 'max:7'],
@@ -63,7 +65,7 @@ class HighlightController extends Controller
     {
         $this->authorize('view', $highlight);
 
-        return response()->json($highlight->load(['bookmark', 'tags']));
+        return response()->json($highlight->load(['bookmark', 'task', 'tags']));
     }
 
     public function update(Request $request, Highlight $highlight): JsonResponse

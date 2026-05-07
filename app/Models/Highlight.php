@@ -14,6 +14,7 @@ class Highlight extends Model
     protected $fillable = [
         'user_id',
         'bookmark_id',
+        'task_id',
         'text',
         'note',
         'color',
@@ -35,6 +36,11 @@ class Highlight extends Model
     public function bookmark(): BelongsTo
     {
         return $this->belongsTo(Bookmark::class);
+    }
+
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
     }
 
     public function tags(): MorphToMany

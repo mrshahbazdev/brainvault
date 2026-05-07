@@ -30,6 +30,7 @@ class NoteController extends Controller
             ->where('is_trashed', false)
             ->when($request->search, fn ($q, $search) => $q->where('title', 'like', "%{$search}%"))
             ->when($request->bookmark_id, fn ($q, $id) => $q->where('bookmark_id', $id))
+            ->when($request->task_id, fn ($q, $id) => $q->where('task_id', $id))
             ->when($request->boolean('is_pinned'), fn ($q) => $q->where('is_pinned', true))
             ->with('tags')
             ->latest()
@@ -46,6 +47,7 @@ class NoteController extends Controller
             'content_html' => ['nullable', 'string'],
             'content_plain' => ['nullable', 'string'],
             'bookmark_id' => ['nullable', 'exists:bookmarks,id'],
+            'task_id' => ['nullable', 'exists:tasks,id'],
             'note_type' => ['nullable', 'in:note,quick,checklist'],
             'color' => ['nullable', 'string', 'max:7'],
         ]);
@@ -59,7 +61,7 @@ class NoteController extends Controller
     {
         $this->authorize('view', $note);
 
-        return response()->json($note->load(['tags', 'bookmark']));
+        return response()->json($note->load(['tags', 'bookmark', 'task']));
     }
 
     public function update(Request $request, Note $note): JsonResponse
@@ -78,7 +80,7 @@ class NoteController extends Controller
 
         $note->update($validated);
 
-        return response()->json($note->fresh(['tags', 'bookmark']));
+        return response()->json($note->fresh(['tags', 'bookmark', 'task']));
     }
 
     public function destroy(Note $note): JsonResponse
