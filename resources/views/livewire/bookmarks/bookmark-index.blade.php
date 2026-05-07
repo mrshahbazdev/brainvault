@@ -95,12 +95,12 @@
     @if($view === 'grid')
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @forelse($bookmarks as $bookmark)
-                <div class="group bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative"
+                <div class="group bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative"
                      wire:key="bookmark-{{ $bookmark->id }}"
                      x-data="{ showPreview: false }"
                      @mouseenter="showPreview = true" @mouseleave="showPreview = false">
                     {{-- Image --}}
-                    <div class="relative aspect-video bg-gray-100 dark:bg-surface-800">
+                    <div class="relative aspect-video bg-gray-100 dark:bg-surface-800 rounded-t-2xl overflow-hidden">
                         @if($bookmark->og_image_url)
                             <img src="{{ $bookmark->og_image_url }}" alt="" class="w-full h-full object-cover">
                         @elseif(preg_match('/\.(jpeg|jpg|gif|png|webp|svg)$/i', parse_url($bookmark->url, PHP_URL_PATH) ?? ''))
