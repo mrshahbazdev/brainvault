@@ -7,6 +7,7 @@ use App\Jobs\CheckBrokenLinks;
 use App\Models\Bookmark;
 use App\Models\Collection;
 use App\Models\Tag;
+use App\Models\Task;
 use App\Services\MetadataScraperService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -45,8 +46,11 @@ class BookmarkIndex extends Component
     // Bulk action modals
     public bool $showBulkTagModal = false;
     public bool $showBulkMoveModal = false;
+    public bool $showBulkAddToTaskModal = false;
     public string $bulkTagName = '';
     public ?int $bulkMoveCollectionId = null;
+    public ?int $bulkTaskProjectId = null;
+    public string $bulkTaskStatus = 'todo';
 
     public function mount(): void
     {
@@ -283,6 +287,49 @@ class BookmarkIndex extends Component
         $this->selectAll = false;
     }
 
+    public function addSingleToTask(int $bookmarkId): void
+    {
+        $this->selected = [(string) $bookmarkId];
+        $this->openBulkAddToTaskModal();
+    }
+
+    public function openBulkAddToTaskModal(): void
+    {
+        $this->bulkTaskProjectId = null;
+        $this->bulkTaskStatus = 'todo';
+        $this->showBulkAddToTaskModal = true;
+    }
+
+    public function applyBulkAddToTask(): void
+    {
+        if (!$this->bulkTaskProjectId) {
+            return;
+        }
+
+        $project = Auth::user()->researchProjects()->find($this->bulkTaskProjectId);
+        if (!$project) {
+            return;
+        }
+
+        $bookmarks = Auth::user()->bookmarks()->whereIn('id', $this->selected)->get();
+        foreach ($bookmarks as $bookmark) {
+            Task::create([
+                'user_id' => Auth::id(),
+                'research_project_id' => $project->id,
+                'bookmark_id' => $bookmark->id,
+                'title' => $bookmark->title ?? 'Untitled Bookmark',
+                'description' => $bookmark->description,
+                'status' => $this->bulkTaskStatus,
+                'priority' => 'medium',
+            ]);
+        }
+
+        $this->showBulkAddToTaskModal = false;
+        $this->selected = [];
+        $this->selectAll = false;
+        $this->dispatch('notify', message: count($bookmarks) . ' bookmark(s) added as tasks.');
+    }
+
     protected function getBookmarksQuery()
     {
         return Auth::user()->bookmarks()
@@ -312,6 +359,7 @@ class BookmarkIndex extends Component
             'bookmarks' => $this->getBookmarksQuery()->with(['tags', 'collections'])->paginate(24),
             'collections' => Auth::user()->collections()->orderBy('name')->get(),
             'allTags' => Auth::user()->tags()->orderBy('name')->get(),
+            'researchProjects' => Auth::user()->researchProjects()->orderBy('name')->get(),
             'trashCount' => Auth::user()->bookmarks()->where('is_trashed', true)->count(),
             'brokenCount' => Auth::user()->bookmarks()->where('link_status', 'dead')->where('is_trashed', false)->count(),
             'readLaterCount' => Auth::user()->bookmarks()->where('is_read_later', true)->where('is_trashed', false)->count(),
