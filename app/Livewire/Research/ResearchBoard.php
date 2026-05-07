@@ -2,8 +2,6 @@
 
 namespace App\Livewire\Research;
 
-use App\Models\Highlight;
-use App\Models\Note;
 use App\Models\ResearchProject;
 use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
@@ -117,6 +115,10 @@ class ResearchBoard extends Component
             'newHighlightNote' => 'nullable|string',
         ]);
 
+        if (!Auth::user()->tasks()->where('id', $this->selectedTaskId)->exists()) {
+            return;
+        }
+
         Auth::user()->highlights()->create([
             'task_id' => $this->selectedTaskId,
             'text' => $this->newHighlightText,
@@ -150,6 +152,10 @@ class ResearchBoard extends Component
             'newNoteTitle' => 'nullable|string|max:500',
             'newNoteContent' => 'nullable|string',
         ]);
+
+        if (!Auth::user()->tasks()->where('id', $this->selectedTaskId)->exists()) {
+            return;
+        }
 
         Auth::user()->notes()->create([
             'task_id' => $this->selectedTaskId,
