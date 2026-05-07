@@ -10,6 +10,22 @@
         </button>
     </div>
 
+    {{-- Bulk Actions Bar --}}
+    @if(count($selectedTasks) > 0)
+        <div class="bg-white dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 mb-6">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ count($selectedTasks) }} {{ __('selected') }}</span>
+                <button wire:click="bulkFavorite" class="px-3 py-1.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/30 transition-colors">{{ __('Favorite') }}</button>
+                <button wire:click="bulkArchive" class="px-3 py-1.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors">{{ __('Archive') }}</button>
+                <button wire:click="bulkReadLater" class="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/30 transition-colors">{{ __('Read Later') }}</button>
+                <button wire:click="openBulkTagModal" class="px-3 py-1.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/30 transition-colors">{{ __('Tag') }}</button>
+                <button wire:click="openBulkMoveModal" class="px-3 py-1.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/30 transition-colors">{{ __('Move to Collection') }}</button>
+                <button wire:click="openBulkAddToTaskModal" class="px-3 py-1.5 text-xs font-medium bg-teal-100 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-900/30 transition-colors">{{ __('Add to Task') }}</button>
+                <button wire:click="bulkTrash" wire:confirm="{{ __('Move linked bookmarks to trash?') }}" class="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors">{{ __('Trash') }}</button>
+            </div>
+        </div>
+    @endif
+
     @forelse($projects as $project)
         <div class="mb-8">
             <div class="flex items-center justify-between mb-4">
@@ -33,7 +49,10 @@
                             @foreach($project->tasks->where('status', $status) as $task)
                                 <div class="bg-white dark:bg-surface-900 rounded-xl p-3 border border-gray-200 dark:border-gray-800 group">
                                     <div class="flex items-start justify-between">
-                                        <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ $task->title }}</h4>
+                                        <div class="flex items-start gap-2">
+                                            <input type="checkbox" wire:model.live="selectedTasks" value="{{ $task->id }}" class="w-4 h-4 mt-0.5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500">
+                                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ $task->title }}</h4>
+                                        </div>
                                         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             @if($status !== 'done')
                                                 <button wire:click="updateTaskStatus({{ $task->id }}, '{{ $status === 'todo' ? 'in_progress' : 'done' }}')" class="p-1 text-gray-400 hover:text-green-600 rounded">
@@ -241,6 +260,78 @@
                 <div class="flex items-center justify-end gap-3 mt-6">
                     <button wire:click="$set('showNoteModal', false)" class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-800 rounded-xl transition-colors">{{ __('Cancel') }}</button>
                     <button wire:click="createNote" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors">{{ __('Add Note') }}</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Bulk Tag Modal --}}
+    @if($showBulkTagModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" wire:click="$set('showBulkTagModal', false)"></div>
+            <div class="relative bg-white dark:bg-surface-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ __('Add Tag to Selected') }}</h2>
+                <input wire:model="bulkTagName" type="text" placeholder="{{ __('Tag name') }}"
+                       class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 mb-4">
+                <div class="flex justify-end gap-3">
+                    <button wire:click="$set('showBulkTagModal', false)" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-800 rounded-xl">{{ __('Cancel') }}</button>
+                    <button wire:click="applyBulkTag" class="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl">{{ __('Apply Tag') }}</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Bulk Move to Collection Modal --}}
+    @if($showBulkMoveModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" wire:click="$set('showBulkMoveModal', false)"></div>
+            <div class="relative bg-white dark:bg-surface-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ __('Move to Collection') }}</h2>
+                <select wire:model="bulkMoveCollectionId"
+                        class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 mb-4">
+                    <option value="">{{ __('Select collection') }}</option>
+                    @foreach($collections as $collection)
+                        <option value="{{ $collection->id }}">{{ $collection->name }}</option>
+                    @endforeach
+                </select>
+                <div class="flex justify-end gap-3">
+                    <button wire:click="$set('showBulkMoveModal', false)" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-800 rounded-xl">{{ __('Cancel') }}</button>
+                    <button wire:click="applyBulkMove" class="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl">{{ __('Move') }}</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Bulk Add to Task Modal --}}
+    @if($showBulkAddToTaskModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" wire:click="$set('showBulkAddToTaskModal', false)"></div>
+            <div class="relative bg-white dark:bg-surface-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ __('Add to Task') }}</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Research Project') }}</label>
+                        <select wire:model="bulkTaskProjectId"
+                                class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                            <option value="">{{ __('Select project') }}</option>
+                            @foreach($researchProjects as $rProject)
+                                <option value="{{ $rProject->id }}">{{ $rProject->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Task Status') }}</label>
+                        <select wire:model="bulkTaskStatus"
+                                class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                            <option value="todo">{{ __('To Do') }}</option>
+                            <option value="in_progress">{{ __('In Progress') }}</option>
+                            <option value="done">{{ __('Done') }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button wire:click="$set('showBulkAddToTaskModal', false)" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-800 rounded-xl">{{ __('Cancel') }}</button>
+                    <button wire:click="applyBulkAddToTask" class="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl">{{ __('Add to Task') }}</button>
                 </div>
             </div>
         </div>
