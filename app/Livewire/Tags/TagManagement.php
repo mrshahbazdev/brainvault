@@ -20,6 +20,22 @@ class TagManagement extends Component
     public string $newName = '';
     public ?int $mergeTargetId = null;
 
+    // Highlight modal
+    public bool $showHighlightModal = false;
+    public ?int $highlightTagId = null;
+    public string $newHighlightText = '';
+    public string $newHighlightColor = '#FBBF24';
+    public string $newHighlightNote = '';
+
+    // Note modal
+    public bool $showNoteModal = false;
+    public ?int $noteTagId = null;
+    public string $newNoteTitle = '';
+    public string $newNoteContent = '';
+
+    // Expanded tag to show details
+    public ?int $expandedTagId = null;
+
     public function updatedSearch(): void
     {
         $this->selected = [];
@@ -127,6 +143,89 @@ class TagManagement extends Component
         Auth::user()->tags()->where('id', $id)->delete();
     }
 
+    public function toggleExpand(int $id): void
+    {
+        $this->expandedTagId = $this->expandedTagId === $id ? null : $id;
+    }
+
+    public function openHighlightModal(int $tagId): void
+    {
+        $this->highlightTagId = $tagId;
+        $this->reset(['newHighlightText', 'newHighlightColor', 'newHighlightNote']);
+        $this->newHighlightColor = '#FBBF24';
+        $this->showHighlightModal = true;
+    }
+
+    public function createHighlight(): void
+    {
+        $this->validate([
+            'newHighlightText' => 'required|string',
+            'newHighlightColor' => 'nullable|string|max:7',
+            'newHighlightNote' => 'nullable|string',
+        ]);
+
+        $tag = Auth::user()->tags()->findOrFail($this->highlightTagId);
+
+        $highlight = Auth::user()->highlights()->create([
+            'text' => $this->newHighlightText,
+            'color' => $this->newHighlightColor,
+            'note' => $this->newHighlightNote ?: null,
+            'page_url' => 'brainvault://tag/' . $tag->id,
+            'start_xpath' => '',
+            'start_offset' => 0,
+            'end_xpath' => '',
+            'end_offset' => 0,
+        ]);
+
+        $tag->highlights()->attach($highlight->id);
+
+        $this->showHighlightModal = false;
+        $this->dispatch('notify', message: __('Highlight added to tag.'));
+    }
+
+    public function removeHighlight(int $tagId, int $highlightId): void
+    {
+        $tag = Auth::user()->tags()->findOrFail($tagId);
+        $tag->highlights()->detach($highlightId);
+        $this->dispatch('notify', message: __('Highlight removed from tag.'));
+    }
+
+    public function openNoteModal(int $tagId): void
+    {
+        $this->noteTagId = $tagId;
+        $this->reset(['newNoteTitle', 'newNoteContent']);
+        $this->showNoteModal = true;
+    }
+
+    public function createNote(): void
+    {
+        $this->validate([
+            'newNoteTitle' => 'nullable|string|max:500',
+            'newNoteContent' => 'nullable|string',
+        ]);
+
+        $tag = Auth::user()->tags()->findOrFail($this->noteTagId);
+
+        $note = Auth::user()->notes()->create([
+            'title' => $this->newNoteTitle ?: 'Untitled Note',
+            'content' => $this->newNoteContent,
+            'content_plain' => strip_tags($this->newNoteContent),
+            'note_type' => 'note',
+        ]);
+
+        $tag->notes()->attach($note->id);
+
+        $this->showNoteModal = false;
+        $this->dispatch('notify', message: __('Note added to tag.'));
+    }
+
+    public function removeNote(int $tagId, int $noteId): void
+    {
+        $tag = Auth::user()->tags()->findOrFail($tagId);
+        $tag->notes()->detach($noteId);
+        $this->dispatch('notify', message: __('Note removed from tag.'));
+    }
+
     protected function getTagsQuery()
     {
         return Auth::user()->tags()
@@ -136,10 +235,17 @@ class TagManagement extends Component
 
     public function render()
     {
+        $query = $this->getTagsQuery();
+
+        if ($this->expandedTagId) {
+            $query->with([
+                'highlights' => fn ($q) => $q->latest()->limit(20),
+                'notes' => fn ($q) => $q->latest()->limit(20),
+            ]);
+        }
+
         return view('livewire.tags.tag-management', [
-            'tags' => $this->getTagsQuery()
-                ->orderByDesc('usage_count')
-                ->get(),
+            'tags' => $query->orderByDesc('usage_count')->get(),
         ])->layout('layouts.app', ['title' => 'Tag Management']);
     }
 }
