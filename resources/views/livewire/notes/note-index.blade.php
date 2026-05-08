@@ -51,6 +51,9 @@
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 </button>
                             @else
+                                <button wire:click="openMoveToTaskModal({{ $note->id }})" class="p-1 rounded text-gray-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20" title="{{ __('Move to Task') }}">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                                </button>
                                 <button wire:click="trashNote({{ $note->id }})" class="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 </button>
@@ -71,6 +74,9 @@
                             @endif
                             @if($note->bookmark_id)
                                 <span class="px-1.5 py-0.5 text-[10px] font-medium bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 rounded">{{ __('Linked') }}</span>
+                            @endif
+                            @if($note->task)
+                                <span class="px-1.5 py-0.5 text-[10px] font-medium bg-teal-100 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 rounded">{{ __('Task') }}</span>
                             @endif
                         </div>
                         <span class="text-[10px] text-gray-400">{{ $note->updated_at->diffForHumans() }}</span>
@@ -175,6 +181,41 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- Move to Task Modal --}}
+    @if($showMoveToTaskModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" wire:click="$set('showMoveToTaskModal', false)"></div>
+            <div class="relative bg-white dark:bg-surface-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ __('Move to Task') }}</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Research Project') }}</label>
+                        <select wire:model="taskProjectId"
+                                class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                            <option value="">{{ __('Select project') }}</option>
+                            @foreach($researchProjects as $project)
+                                <option value="{{ $project->id }}">{{ $project->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Task Status') }}</label>
+                        <select wire:model="taskStatus"
+                                class="w-full px-4 py-2.5 bg-gray-100 dark:bg-surface-800 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+                            <option value="todo">{{ __('To Do') }}</option>
+                            <option value="in_progress">{{ __('In Progress') }}</option>
+                            <option value="done">{{ __('Done') }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button wire:click="$set('showMoveToTaskModal', false)" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-800 rounded-xl">{{ __('Cancel') }}</button>
+                    <button wire:click="applyMoveToTask" class="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl">{{ __('Move to Task') }}</button>
+                </div>
             </div>
         </div>
     @endif

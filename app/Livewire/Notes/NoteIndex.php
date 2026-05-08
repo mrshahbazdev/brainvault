@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Notes;
 
+use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -22,6 +23,11 @@ class NoteIndex extends Component
     public string $newContent = '';
     public string $newColor = '';
     public string $noteType = 'note';
+
+    public bool $showMoveToTaskModal = false;
+    public ?int $moveToTaskNoteId = null;
+    public ?int $taskProjectId = null;
+    public string $taskStatus = 'todo';
 
     public function mount(): void
     {
@@ -87,6 +93,43 @@ class NoteIndex extends Component
         Auth::user()->notes()->findOrFail($id)->delete();
     }
 
+    public function openMoveToTaskModal(int $id): void
+    {
+        $this->moveToTaskNoteId = $id;
+        $this->taskProjectId = null;
+        $this->taskStatus = 'todo';
+        $this->showMoveToTaskModal = true;
+    }
+
+    public function applyMoveToTask(): void
+    {
+        if (!$this->taskProjectId || !$this->moveToTaskNoteId) {
+            return;
+        }
+
+        $project = Auth::user()->researchProjects()->find($this->taskProjectId);
+        if (!$project) {
+            return;
+        }
+
+        $note = Auth::user()->notes()->findOrFail($this->moveToTaskNoteId);
+
+        $task = Task::create([
+            'user_id' => Auth::id(),
+            'research_project_id' => $project->id,
+            'title' => $note->title ?: 'Untitled Note',
+            'description' => $note->content_plain,
+            'status' => $this->taskStatus,
+            'priority' => 'medium',
+        ]);
+
+        $note->update(['task_id' => $task->id]);
+
+        $this->showMoveToTaskModal = false;
+        $this->reset(['moveToTaskNoteId', 'taskProjectId', 'taskStatus']);
+        $this->dispatch('notify', message: 'Note moved to task.');
+    }
+
     public function render()
     {
         $notes = Auth::user()->notes()
@@ -95,12 +138,13 @@ class NoteIndex extends Component
             ->when($this->filter === 'pinned', fn ($q) => $q->where('is_pinned', true)->where('is_trashed', false))
             ->when($this->filter === 'archived', fn ($q) => $q->where('is_archived', true)->where('is_trashed', false))
             ->when($this->filter === 'trash', fn ($q) => $q->where('is_trashed', true))
-            ->with('tags')
+            ->with(['tags', 'task'])
             ->latest()
             ->paginate(24);
 
         return view('livewire.notes.note-index', [
             'notes' => $notes,
+            'researchProjects' => Auth::user()->researchProjects()->orderBy('name')->get(),
         ])->layout('layouts.app', ['title' => 'Notes']);
     }
 }
